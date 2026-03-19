@@ -2,6 +2,7 @@ use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::RwLock;
 use std::time::{Duration, SystemTime};
+use tokio::sync::RwLock as TokioRwLock;
 use chrono::{DateTime, Utc};
 
 #[derive(Debug, Clone)]
@@ -38,14 +39,14 @@ impl CacheData {
 }
 
 pub struct Cache {
-    pub data: RwLock<HashMap<String, CacheData>>,
+    pub data: TokioRwLock<HashMap<String, CacheData>>,
     default_ttl: Duration,
 }
 
 impl Cache {
     pub fn new(default_ttl_seconds: u64) -> Self {
         Self {
-            data: RwLock::new(HashMap::new()),
+            data: TokioRwLock::new(HashMap::new()),
             default_ttl: Duration::from_secs(default_ttl_seconds),
         }
     }
@@ -64,26 +65,26 @@ impl Cache {
     }
 
     pub async fn remove(&self, key: &str) -> Option<CacheData> {
-        let mut cache = self.data.write().await;
+        let mut cache: tokio::sync::RwLockWriteGuard<'_, HashMap<String, CacheData>> = self.data.write().await;
         cache.remove(key)
     }
 
     pub async fn clear(&self) {
-        let mut cache = self.data.write().await;
+        let mut cache: tokio::sync::RwLockWriteGuard<'_, HashMap<String, CacheData>> = self.data.write().await;
         cache.clear();
     }
 
     pub async fn clear_expired(&self) -> usize {
-        let mut cache = self.data.write().await;
+        let mut cache: tokio::sync::RwLockWriteGuard<'_, HashMap<String, CacheData>> = self.data.write().await;
         let initial_len = cache.len();
         
-        cache.retain(|_, data| !data.is_expired());
+        cache.retain(|_, data: &mut CacheData| !data.is_expired());
         
         initial_len - cache.len()
     }
 
     pub async fn len(&self) -> usize {
-        let cache = self.data.read().await;
+        let cache: tokio::sync::RwLockReadGuard<'_, HashMap<String, CacheData>> = self.data.read().await;
         cache.len()
     }
 }

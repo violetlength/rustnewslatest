@@ -65,7 +65,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { Loading, Warning, Document, Star, Link } from '@element-plus/icons-vue'
-import type { NewsSource } from '@/types'
+import type { NewsSource } from '../types'
 
 interface Props {
   activeSource: string

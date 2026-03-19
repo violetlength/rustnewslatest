@@ -2,6 +2,7 @@
   <div class="news-layout">
     <NewsHeader 
       :active-source="activeSource"
+      :loading="isLoading"
       @refresh="handleRefresh"
       @clear-cache="handleClearCache"
     />
@@ -15,7 +16,7 @@
         :active-source="activeSource"
         :news-source="currentNewsSource"
         :loading="isLoading"
-        :error="getError"
+        :error="getError || undefined"
       />
     </div>
   </div>
@@ -23,11 +24,11 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useNewsStore } from '@/stores/news'
+import { useNewsStore } from '../stores/news'
 import NewsHeader from './NewsHeader.vue'
 import NewsSidebar from './NewsSidebar.vue'
 import NewsContent from './NewsContent.vue'
-import type { NewsSource, NewsSourceConfig } from '@/types'
+import type { NewsSource, NewsSourceConfig } from '../types'
 
 const newsStore = useNewsStore()
 

@@ -1,81 +1,107 @@
+<script setup lang="ts">
+import { Refresh, Delete } from "@element-plus/icons-vue";
+
+interface Props {
+  activeSource: string;
+}
+
+interface Emits {
+  (e: "refresh"): void;
+  (e: "clear-cache"): void;
+}
+
+defineProps<Props>();
+defineEmits<Emits>();
+</script>
+
 <template>
   <header class="news-header">
     <div class="header-content">
-      <h1 class="header-title">
-        <el-icon><Document /></el-icon>
-        RustNewsLatest
-      </h1>
-      <div class="header-actions">
+      <div class="logo">
+        <h1>NewsLatest</h1>
+        <span class="subtitle">今日热榜</span>
+      </div>
+      <div class="actions">
         <el-button 
           type="primary" 
           :icon="Refresh" 
-          :loading="loading"
           @click="$emit('refresh')"
+          title="刷新当前数据源"
         >
-          刷新数据
+          刷新当前数据
         </el-button>
         <el-button 
           type="danger" 
-          :icon="Delete"
-          @click="$emit('clearCache')"
+          :icon="Delete" 
+          @click="$emit('clear-cache')"
+          title="清空所有缓存"
         >
-          清空缓存
+          清空所有缓存
         </el-button>
       </div>
     </div>
   </header>
 </template>
 
-<script setup lang="ts">
-import { Document, Refresh, Delete } from '@element-plus/icons-vue'
-
-interface Props {
-  activeSource: string
-  loading?: boolean
-}
-
-defineProps<Props>()
-
-defineEmits<{
-  refresh: []
-  clearCache: []
-}>()
-</script>
-
 <style scoped>
 .news-header {
-  background: white;
-  border-bottom: 1px solid #e4e7ed;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .header-content {
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
   padding: 1rem 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
+  max-width: 100%;
 }
 
-.header-title {
+.logo {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 0.5rem;
-  margin: 0;
+}
+
+.logo h1 {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #303133;
+  margin: 0;
+  color: white;
 }
 
-.header-title .el-icon {
-  font-size: 1.8rem;
-  color: #409eff;
+.subtitle {
+  font-size: 0.9rem;
+  opacity: 0.8;
+  font-weight: 300;
 }
 
-.header-actions {
+.actions {
   display: flex;
-  gap: 1rem;
+  gap: 0.5rem;
+}
+
+.actions .el-button {
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.actions .el-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.actions .el-button--danger {
+  background: rgba(245, 108, 108, 0.8);
+}
+
+.actions .el-button--danger:hover {
+  background: rgba(245, 108, 108, 0.9);
 }
 
 @media (max-width: 768px) {
@@ -83,14 +109,14 @@ defineEmits<{
     padding: 1rem;
     flex-direction: column;
     gap: 1rem;
+    align-items: stretch;
   }
   
-  .header-title {
-    font-size: 1.2rem;
+  .logo {
+    justify-content: center;
   }
   
-  .header-actions {
-    width: 100%;
+  .actions {
     justify-content: center;
   }
 }

@@ -1,9 +1,9 @@
 import axios from 'axios'
-import type { NewsSource, ApiResponse } from '@/types'
+import type { NewsSource, ApiResponse } from '../types'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
+const API_BASE_URL = import.meta.env?.VITE_API_BASE_URL || 'http://localhost:8080'
 
-class ApiService {
+class ApiServiceClass {
   private client = axios.create({
     baseURL: API_BASE_URL,
     timeout: 30000,
@@ -85,5 +85,4 @@ class ApiService {
   }
 }
 
-export const ApiService = new ApiService()
-export default ApiService
+export const ApiService = new ApiServiceClass()

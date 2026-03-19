@@ -1,7 +1,7 @@
 use axum::{
     extract::{Path, Query, State},
     http::{header, StatusCode},
-    response::{Html, IntoResponse, Response},
+    response::{Html, IntoResponse, Response, Json},
     routing::{get, delete},
     Router,
 };
@@ -193,7 +193,7 @@ async fn proxy_image(
 
             let content_type = response
                 .headers()
-                .get(header::CONTENT_TYPE)
+                .get("content-type")
                 .and_then(|h| h.to_str().ok())
                 .unwrap_or("image/jpeg")
                 .to_string();

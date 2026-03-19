@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { ApiService } from '@/services/api'
-import type { NewsSource, NewsSourceConfig } from '@/types'
+import { ApiService } from '../services/api'
+import type { NewsSource, NewsSourceConfig } from '../types'
 
 export const useNewsStore = defineStore('news', () => {
   // State
@@ -78,8 +78,8 @@ export const useNewsStore = defineStore('news', () => {
       
       // 过滤成功的结果
       const successfulResults = results.filter((result): result is NonNullable<typeof result> => 
-        result !== null && result.success && result.data
-      )
+        result !== null && result.success === true && result.data !== undefined
+      ) as Array<{ success: true; data: NewsSource }>
 
       sources.value = successfulResults.map(result => result.data!)
       

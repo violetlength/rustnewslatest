@@ -40,10 +40,10 @@ import {
   Platform, 
   Reading, 
   Document, 
-  Code, 
+  Edit,
   Money 
 } from '@element-plus/icons-vue'
-import type { NewsSourceConfig } from '@/types'
+import type { NewsSourceConfig } from '../types'
 
 interface Props {
   activeSource: string
@@ -70,7 +70,7 @@ const iconMap = {
   Platform,
   Reading,
   Document,
-  Code,
+  Edit,
   Money
 }
 
