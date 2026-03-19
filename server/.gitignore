@@ -1,0 +1,94 @@
+# Rust
+# Compiled files
+**/target/
+**/*.rs.bk
+
+# Cargo lock file (optional - uncomment if you want to ignore it)
+# Cargo.lock
+
+# These are backup files from rust-analyzer
+**/rust-analyzer/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Logs
+*.log
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Temporary files
+tmp/
+temp/
+
+# Backup files
+*.bak
+*.backup
+
+# Test files
+**/*.profraw
+
+# Documentation build
+docs/build/
+
+# Local database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Cache directories
+.cache/
+
+# Build artifacts
+**/*.pdb
+**/*.exe
+**/*.dll
+**/*.dylib
+
+# Rust analyzer
+.rust-analyzer/
+
+# Cargo
+Cargo.lock
+
+# Debug builds
+debug/
+target/
+
+# Backup and temp files
+*~
+*.swp
+*.swo
+.#*
+
+# Logs
+logs/
+*.log
+
+# Local configuration
+config/local.toml
+config/local.yaml
+config/local.json
+
+# Test output
+test-results/
+coverage/
+
+# Temporary build artifacts
+build/
+dist/
