@@ -323,9 +323,9 @@ async fn main() -> anyhow::Result<()> {
         .with_state(app_state);
 
     // 启动服务器
-    let listener = TcpListener::bind("127.0.0.1:8080").await?;
-    info!("🌐 服务器启动在 http://127.0.0.1:8080");
-    info!("📋 API文档: http://127.0.0.1:8080");
+    let listener = TcpListener::bind("0.0.0.0:8080").await?;
+    info!("🌐 服务器启动在 http://0.0.0.0:8080");
+    info!("📋 API文档: http://0.0.0.0:8080");
     info!("🚀 前端应用请运行: npm run dev");
 
     axum::serve(listener, app).await?;

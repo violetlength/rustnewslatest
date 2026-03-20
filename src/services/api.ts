@@ -1,7 +1,7 @@
 import axios from 'axios'
 import type { NewsSource, ApiResponse } from '../types'
 
-const API_BASE_URL = import.meta.env?.VITE_API_BASE_URL || 'http://localhost:8080'
+const API_BASE_URL = import.meta.env?.VITE_API_BASE_URL || 'https://newslatest-server.up.railway.app/'
 
 class ApiServiceClass {
   private client = axios.create({
