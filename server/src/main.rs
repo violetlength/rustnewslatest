@@ -323,7 +323,10 @@ async fn main() -> anyhow::Result<()> {
         .with_state(app_state);
 
     // 启动服务器
-    let listener = TcpListener::bind("0.0.0.0:8080").await?;
+    let port = std::env::var("PORT").unwrap_or_else(|_| "8080".to_string());
+    let addr = format!("0.0.0.0:{}", port);
+    let listener = TcpListener::bind(&addr).await.unwrap();
+    // let listener = TcpListener::bind("0.0.0.0:8080").await?;
     info!("🌐 服务器启动在 http://0.0.0.0:8080");
     info!("📋 API文档: http://0.0.0.0:8080");
     info!("🚀 前端应用请运行: npm run dev");
