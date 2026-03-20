@@ -25,7 +25,6 @@ markup5ever = "0.11"
 regex = "1.0"
 serde_with = { version = "3.0", features = ["chrono"] }
 urlencoding = "2.1"
-time = "0.3.47" 
 
 [[bin]]
 name = "rustnewslatest-server"

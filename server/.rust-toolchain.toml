@@ -1,0 +1,5 @@
+[toolchain]
+channel = "nightly"
+# 或者为了更稳定，指定一个具体的 nightly 日期 (推荐 2025-01-01 之后的日期)
+# channel = "nightly-2025-02-01"
+components = ["rustfmt", "clippy"]
