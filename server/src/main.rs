@@ -23,6 +23,8 @@ mod cache;
 
 use news_service::NewsService;
 
+
+
 #[derive(Clone)]
 struct AppState {
     news_service: Arc<NewsService>,
@@ -244,7 +246,7 @@ async fn index() -> impl IntoResponse {
 </head>
 <body>
     <div class="header">
-        <h1>🦀 RustNewsLatest API</h1>
+        <h1>📰 RustNewsLatest API</h1>
         <p>基于 Rust + Axum 的新闻聚合 API 服务</p>
     </div>
     
