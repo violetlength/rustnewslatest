@@ -12,7 +12,7 @@ interface Emits {
   (e: "toggle-sidebar"): void;
 }
 
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
   sidebarCollapsed: false
 });
 
