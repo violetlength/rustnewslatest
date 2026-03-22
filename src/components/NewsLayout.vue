@@ -3,13 +3,16 @@
     <NewsHeader 
       :active-source="activeSource"
       :loading="isLoading"
+      :sidebar-collapsed="sidebarCollapsed"
       @refresh="handleRefresh"
       @clear-cache="handleClearCache"
+      @toggle-sidebar="handleToggleSidebar"
     />
     <div class="layout-content">
       <NewsSidebar 
         :active-source="activeSource"
         :sources="availableSources"
+        :collapsed="sidebarCollapsed"
         @source-change="handleSourceChange"
       />
       <NewsContent 
@@ -33,6 +36,7 @@ import type { NewsSource, NewsSourceConfig } from '../types'
 const newsStore = useNewsStore()
 
 const activeSource = ref('zhihu')
+const sidebarCollapsed = ref(false)
 
 const availableSources = computed<NewsSourceConfig[]>(() => [
   { name: 'zhihu', title: '知乎', description: '有问题，就会有答案', icon: 'ChatDotRound', color: '#0084ff' },
@@ -74,8 +78,17 @@ const handleSourceChange = (source: string) => {
   newsStore.fetchNewsSource(source)
 }
 
+const handleToggleSidebar = () => {
+  sidebarCollapsed.value = !sidebarCollapsed.value
+}
+
 onMounted(() => {
   newsStore.fetchNewsSource(activeSource.value)
+  
+  // 在移动设备上默认折叠侧边栏
+  if (window.innerWidth <= 768) {
+    sidebarCollapsed.value = true
+  }
 })
 </script>
 
@@ -91,5 +104,9 @@ onMounted(() => {
   flex: 1;
   display: flex;
   overflow: hidden;
+}
+
+.layout-content.sidebar-collapsed {
+  grid-template-columns: auto 1fr;
 }
 </style>

@@ -1,9 +1,9 @@
 <template>
-  <aside class="news-sidebar">
-    <div class="sidebar-header">
+  <aside class="news-sidebar" :class="{ collapsed: collapsed }">
+    <div class="sidebar-header" v-if="!collapsed">
       <h3>新闻源</h3>
     </div>
-    <div class="sidebar-content">
+    <div class="sidebar-content" v-if="!collapsed">
       <div class="source-list">
         <div
           v-for="source in sources"
@@ -19,6 +19,24 @@
           <div class="source-info">
             <div class="source-title">{{ source.title }}</div>
             <div class="source-desc">{{ source.description }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- 折叠状态下显示的简化版本 -->
+    <div class="collapsed-sidebar" v-else>
+      <div class="collapsed-source-list">
+        <div
+          v-for="source in sources"
+          :key="source.name"
+          :class="['collapsed-source-item', { active: source.name === activeSource }]"
+          @click="$emit('sourceChange', source.name)"
+          :title="source.title"
+        >
+          <div class="collapsed-source-icon" :style="{ color: source.color }">
+            <el-icon>
+              <component :is="getIconComponent(source.icon)" />
+            </el-icon>
           </div>
         </div>
       </div>
@@ -48,6 +66,7 @@ import type { NewsSourceConfig } from '../types'
 interface Props {
   activeSource: string
   sources: NewsSourceConfig[]
+  collapsed?: boolean
 }
 
 defineProps<Props>()
@@ -87,6 +106,11 @@ const getIconComponent = (iconName: string) => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  transition: width 0.3s ease;
+}
+
+.news-sidebar.collapsed {
+  width: 60px;
 }
 
 .sidebar-header {
@@ -180,9 +204,64 @@ const getIconComponent = (iconName: string) => {
   color: #409eff;
 }
 
+/* 折叠状态的样式 */
+.collapsed-sidebar {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem;
+}
+
+.collapsed-source-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.collapsed-source-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+}
+
+.collapsed-source-item:hover {
+  background-color: #f5f7fa;
+  border-color: #e4e7ed;
+}
+
+.collapsed-source-item.active {
+  background-color: #ecf5ff;
+  border-color: #409eff;
+}
+
+.collapsed-source-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: #f5f7fa;
+  font-size: 16px;
+}
+
+.collapsed-source-item.active .collapsed-source-icon {
+  background-color: #409eff;
+  color: white;
+}
+
 @media (max-width: 768px) {
   .news-sidebar {
     width: 250px;
+  }
+  
+  .news-sidebar.collapsed {
+    width: 50px;
   }
   
   .sidebar-header {
@@ -210,6 +289,20 @@ const getIconComponent = (iconName: string) => {
   
   .source-desc {
     font-size: 0.7rem;
+  }
+  
+  .collapsed-sidebar {
+    padding: 0.25rem;
+  }
+  
+  .collapsed-source-item {
+    padding: 0.5rem;
+  }
+  
+  .collapsed-source-icon {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
   }
 }
 </style>

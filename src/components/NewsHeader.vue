@@ -1,25 +1,40 @@
 <script setup lang="ts">
-import { Refresh, Delete } from "@element-plus/icons-vue";
+import { Refresh, Delete, Menu } from "@element-plus/icons-vue";
 
 interface Props {
   activeSource: string;
+  sidebarCollapsed?: boolean;
 }
 
 interface Emits {
   (e: "refresh"): void;
   (e: "clear-cache"): void;
+  (e: "toggle-sidebar"): void;
 }
 
-defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  sidebarCollapsed: false
+});
+
 defineEmits<Emits>();
 </script>
 
 <template>
   <header class="news-header">
     <div class="header-content">
-      <div class="logo">
-        <h1>NewsLatest</h1>
-        <span class="subtitle">今日热榜</span>
+      <div class="header-left">
+        <el-button 
+          class="menu-toggle"
+          :icon="Menu" 
+          @click="$emit('toggle-sidebar')"
+          :title="sidebarCollapsed ? '展开侧边栏' : '折叠侧边栏'"
+          circle
+          size="small"
+        />
+        <div class="logo">
+          <h1>NewsLatest</h1>
+          <span class="subtitle">今日热榜</span>
+        </div>
       </div>
       <div class="actions">
         <el-button 
@@ -57,6 +72,25 @@ defineEmits<Emits>();
   align-items: center;
   padding: 1rem 2rem;
   max-width: 100%;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.menu-toggle {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.menu-toggle:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
 }
 
 .logo {
@@ -112,12 +146,24 @@ defineEmits<Emits>();
     align-items: stretch;
   }
   
+  .header-left {
+    justify-content: space-between;
+    width: 100%;
+  }
+  
   .logo {
     justify-content: center;
   }
   
   .actions {
     justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .actions .el-button {
+    font-size: 0.85rem;
+    padding: 0.5rem 1rem;
   }
 }
 </style>
