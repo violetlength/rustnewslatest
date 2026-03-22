@@ -64,6 +64,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { ElMessageBox } from 'element-plus'
 import { Loading, Warning, Document, Star, Link } from '@element-plus/icons-vue'
 import type { NewsSource } from '../types'
 
@@ -123,7 +124,26 @@ async function handleImageError(event: Event, originalUrl: string) {
 
 // 直接打开网页
 function openUrlDrawer(url: string) {
-  window.open(url, '_blank');
+  // 显示确认对话框
+  ElMessageBox.confirm(
+    '您即将跳转到外部网站，是否继续？',
+    '跳转确认',
+    {
+      confirmButtonText: '确认跳转',
+      cancelButtonText: '取消',
+      type: 'info',
+      draggable: true,
+      customStyle: {
+        maxWidth: '400px'
+      }
+    }
+  ).then(() => {
+    // 用户确认后打开链接
+    window.open(url, '_blank');
+  }).catch(() => {
+    // 用户取消，不做任何操作
+    console.log('用户取消了跳转');
+  });
 }
 
 // 监听数据源变化，滚动到顶部
