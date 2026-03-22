@@ -20,6 +20,7 @@ use types::*;
 mod news_service;
 mod types;
 mod cache;
+mod config;
 
 use news_service::NewsService;
 
@@ -29,6 +30,7 @@ use news_service::NewsService;
 struct AppState {
     news_service: Arc<NewsService>,
     cache: Arc<DashMap<String, CachedResponse>>,
+    config: Arc<config::Config>,
 }
 
 // 缓存结构
@@ -118,6 +120,7 @@ async fn get_news(
     }
 
     // 获取新数据
+    let ttl_minutes = state.config.get_ttl_for_source(&source);
     let result = match source.as_str() {
         "bilibili" => state.news_service.get_bilibili_hot(no_cache).await,
         "weibo" => state.news_service.get_weibo_hot(no_cache).await,
@@ -143,7 +146,8 @@ async fn get_news(
             
             // 缓存结果
             if !no_cache {
-                let cached = CachedResponse::new(data.clone(), Duration::from_secs(300)); // 5分钟缓存
+                let http_cache_ttl = state.config.get_http_cache_ttl();
+                let cached = CachedResponse::new(data.clone(), Duration::from_secs(http_cache_ttl));
                 state.cache.insert(cache_key, cached);
             }
             
@@ -293,10 +297,23 @@ async fn main() -> anyhow::Result<()> {
     info!("📰 启动 RustNewsLatest 服务器...");
 
     // 创建应用状态
-    let news_service = Arc::new(NewsService::new());
+    let config = match config::Config::load() {
+        Ok(config) => {
+            info!("✅ 配置文件加载成功");
+            Arc::new(config)
+        }
+        Err(e) => {
+            warn!("⚠️ 配置文件加载失败: {}，使用默认配置", e);
+            Arc::new(config::Config::default())
+        }
+    };
+    
+    let news_service = Arc::new(NewsService::with_config((*config).clone()));
+    
     let app_state = AppState {
         news_service,
         cache: Arc::new(DashMap::new()),
+        config,
     };
 
     // 创建路由

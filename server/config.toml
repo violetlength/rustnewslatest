@@ -1,0 +1,55 @@
+# 新闻源TTL配置文件
+# 单位：分钟
+
+[news_sources]
+# 微博 - 更新频繁，短缓存
+weibo = 1
+
+# 知乎 - 中等更新频率
+zhihu = 30
+
+# B站 - 中等更新频率  
+bilibili = 45
+
+# GitHub Trending - 每日更新，长缓存
+github = 120
+
+# 掘金 - 技术社区，中等更新频率
+juejin = 60
+
+# 抖音 - 短视频平台，更新频繁
+douyin = 5
+
+# 36氪 - 科技媒体，每日更新
+36kr = 90
+
+# IT之家 - 科技媒体，中等更新频率
+ithome = 60
+
+# SegmentFault - 技术社区，中等更新频率
+segmentfault = 60
+
+# 开源中国 - 技术社区，中等更新频率
+oschina = 60
+
+# InfoQ - 技术媒体，中等更新频率
+infoq = 90
+
+# 阮一峰 - 科技博客周刊，每周更新
+ruanyifeng = 180
+
+# CSDN - IT技术社区，中等更新频率
+csdn = 60
+
+# 证券时报 - 财经媒体，市场时间更新
+stcn = 30
+
+# 财新网 - 财经媒体，中等更新频率
+caixin = 60
+
+[default]
+# 默认TTL（分钟）
+ttl = 60
+
+# HTTP层缓存TTL（秒）
+http_cache_ttl = 300

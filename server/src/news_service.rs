@@ -7,6 +7,7 @@ use std::time::Duration;
 use crate::cache::Cache;
 use chrono::{DateTime, Utc,  NaiveDate, NaiveDateTime, FixedOffset, TimeZone};
 use serde_with::chrono::NaiveTime;
+use crate::config::Config;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NewsItem {
@@ -65,6 +66,7 @@ impl NewsSource {
 pub struct NewsService {
     client: Client,
     cache: Cache,
+    config: Config,
 }
 
 impl NewsService {
@@ -76,6 +78,19 @@ impl NewsService {
                 .build()
                 .unwrap(),
             cache: Cache::new(3600), // 1 hour default TTL
+            config: Config::default(),
+        }
+    }
+
+    pub fn with_config(config: Config) -> Self {
+        Self {
+            client: Client::builder()
+                .timeout(Duration::from_secs(10))
+                .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36")
+                .build()
+                .unwrap(),
+            cache: Cache::new(3600),
+            config,
         }
     }
 
@@ -149,7 +164,7 @@ impl NewsService {
         
         // Cache the results
         // 缓存数据
-        let ttl_minutes = 60u64; // 默认60分钟TTL
+        let ttl_minutes = self.config.get_ttl_for_source("bilibili");
         let expires_at = chrono::Utc::now() + chrono::Duration::minutes(ttl_minutes as i64);
         
         let news_source = NewsSource {
