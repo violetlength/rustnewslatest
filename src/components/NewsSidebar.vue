@@ -100,7 +100,9 @@ const getIconComponent = (iconName: string) => {
 
 <style scoped>
 .news-sidebar {
-  width: 300px;
+  width: 25%;
+  min-width: 250px;
+  max-width: 300px;
   background: white;
   border-right: 1px solid #e4e7ed;
   display: flex;
@@ -111,6 +113,7 @@ const getIconComponent = (iconName: string) => {
 
 .news-sidebar.collapsed {
   width: 60px;
+  min-width: 60px;
 }
 
 .sidebar-header {
@@ -210,12 +213,15 @@ const getIconComponent = (iconName: string) => {
   display: flex;
   flex-direction: column;
   padding: 0.5rem;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .collapsed-source-list {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  padding-bottom: 0.5rem;
 }
 
 .collapsed-source-item {
@@ -257,11 +263,13 @@ const getIconComponent = (iconName: string) => {
 
 @media (max-width: 768px) {
   .news-sidebar {
-    width: 250px;
+    width: 20%;
+    min-width: 200px;
   }
   
   .news-sidebar.collapsed {
     width: 50px;
+    min-width: 50px;
   }
   
   .sidebar-header {
@@ -293,6 +301,8 @@ const getIconComponent = (iconName: string) => {
   
   .collapsed-sidebar {
     padding: 0.25rem;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
   
   .collapsed-source-item {
@@ -303,6 +313,34 @@ const getIconComponent = (iconName: string) => {
     width: 28px;
     height: 28px;
     font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .news-sidebar {
+    width: 30%;
+    min-width: 150px;
+  }
+  
+  .news-sidebar.collapsed {
+    width: 45px;
+    min-width: 45px;
+  }
+  
+  .collapsed-sidebar {
+    padding: 0.25rem;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  
+  .collapsed-source-item {
+    padding: 0.4rem;
+  }
+  
+  .collapsed-source-icon {
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
   }
 }
 </style>
