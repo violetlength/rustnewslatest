@@ -44,12 +44,13 @@ csdn = 60
 # 证券时报 - 财经媒体，市场时间更新
 stcn = 30
 
-# 财新网 - 财经媒体，中等更新频率
-caixin = 60
+# 百度热搜 - 实时热搜榜单，更新频率很高
+baidu = 5
 
 [default]
 # 默认TTL（分钟）
 ttl = 60
-
-# HTTP层缓存TTL（秒）
-http_cache_ttl = 300
+# HTTP缓存TTL（分钟）
+http_cache_ttl = 5
+# 服务器端口
+port = 8080

@@ -1,7 +1,16 @@
 [package]
-name = "rustnewslatest-server"
+name = "newslatest-server"
 version = "0.1.0"
 edition = "2021"
+
+[profile.release]
+# 启用最大优化
+lto = true           # 链接时优化
+codegen-units = 1   # 减少代码生成单元以获得更好优化
+panic = "abort"      # 使用 abort 而不是 unwind
+strip = true        # 剥离调试符号
+opt-level = "z"     # 优化体积
+overflow-checks = false
 
 [dependencies]
 tokio = { version = "1.0", features = ["full"] }
@@ -28,5 +37,5 @@ urlencoding = "2.1"
 toml = "0.8"
 
 [[bin]]
-name = "rustnewslatest-server"
+name = "newslatest-server"
 path = "src/main.rs"

@@ -137,6 +137,7 @@ async fn get_news(
         "csdn" => state.news_service.get_csdn_hot(no_cache).await,
         "stcn" => state.news_service.get_stcn_hot(no_cache).await,
         "caixin" => state.news_service.get_caixin_hot(no_cache).await,
+        "baidu" => state.news_service.get_baidu_hot(no_cache).await,
         _ => Err(format!("未知的新闻源: {}", source).into()),
     };
 
@@ -235,7 +236,7 @@ async fn index() -> impl IntoResponse {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RustNewsLatest API</title>
+    <title>NewsLatest API</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; }
         .header { text-align: center; margin-bottom: 40px; }
@@ -245,12 +246,14 @@ async fn index() -> impl IntoResponse {
         .description { color: #6c757d; margin: 8px 0; }
         pre { background: #f8f9fa; padding: 12px; border-radius: 4px; overflow-x: auto; }
         .news-sources { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 20px 0; }
-        .source { background: #e9ecef; padding: 10px; border-radius: 4px; text-align: center; }
+        .source { background: #e9ecef; padding: 10px; border-radius: 4px; text-align: center; cursor: pointer; transition: all 0.3s ease; }
+        .source:hover { background: #007bff; color: white; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,123,255,0.3); }
+        .source a { text-decoration: none; color: inherit; display: block; }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>📰 RustNewsLatest API</h1>
+        <h1>📰 NewsLatest API</h1>
         <p>基于 Rust + Axum 的新闻聚合 API 服务</p>
     </div>
     
@@ -261,25 +264,23 @@ async fn index() -> impl IntoResponse {
     
     <h2>📰 支持的新闻源</h2>
     <div class="news-sources">
-        <div class="source">bilibili</div>
-        <div class="source">weibo</div>
-        <div class="source">zhihu</div>
-        <div class="source">github</div>
-        <div class="source">juejin</div>
-        <div class="source">douyin</div>
-        <div class="source">36kr</div>
-        <div class="source">ithome</div>
-        <div class="source">segmentfault</div>
-        <div class="source">oschina</div>
-        <div class="source">infoq</div>
-        <div class="source">ruanyifeng</div>
-        <div class="source">csdn</div>
-        <div class="source">stcn</div>
-        <div class="source">caixin</div>
+        <div class="source"><a href="/news/bilibili?no_cache=true" target="_blank">bilibili</a></div>
+        <div class="source"><a href="/news/weibo?no_cache=true" target="_blank">weibo</a></div>
+        <div class="source"><a href="/news/zhihu?no_cache=true" target="_blank">zhihu</a></div>
+        <div class="source"><a href="/news/github?no_cache=true" target="_blank">github</a></div>
+        <div class="source"><a href="/news/juejin?no_cache=true" target="_blank">juejin</a></div>
+        <div class="source"><a href="/news/douyin?no_cache=true" target="_blank">douyin</a></div>
+        <div class="source"><a href="/news/36kr?no_cache=true" target="_blank">36kr</a></div>
+        <div class="source"><a href="/news/ithome?no_cache=true" target="_blank">ithome</a></div>
+        <div class="source"><a href="/news/segmentfault?no_cache=true" target="_blank">segmentfault</a></div>
+        <div class="source"><a href="/news/oschina?no_cache=true" target="_blank">oschina</a></div>
+        <div class="source"><a href="/news/infoq?no_cache=true" target="_blank">infoq</a></div>
+        <div class="source"><a href="/news/ruanyifeng?no_cache=true" target="_blank">ruanyifeng</a></div>
+        <div class="source"><a href="/news/csdn?no_cache=true" target="_blank">csdn</a></div>
+        <div class="source"><a href="/news/stcn?no_cache=true" target="_blank">stcn</a></div>
+        <div class="source"><a href="/news/caixin?no_cache=true" target="_blank">caixin</a></div>
+        <div class="source"><a href="/news/baidu?no_cache=true" target="_blank">baidu</a></div>
     </div>
-    
-    <h2>🔗 前端应用</h2>
-    <p>前端应用运行在: <a href="http://localhost:3000" target="_blank">http://localhost:3000</a></p>
 </body>
 </html>
     "#;
@@ -294,7 +295,7 @@ async fn main() -> anyhow::Result<()> {
         .with_max_level(tracing::Level::INFO)
         .init();
 
-    info!("📰 启动 RustNewsLatest 服务器...");
+    info!("📰 启动 NewsLatest 服务器...");
 
     // 创建应用状态
     let config = match config::Config::load() {
@@ -307,6 +308,9 @@ async fn main() -> anyhow::Result<()> {
             Arc::new(config::Config::default())
         }
     };
+    
+    // 获取端口配置
+    let config_port = config.get_port();
     
     let news_service = Arc::new(NewsService::with_config((*config).clone()));
     
@@ -340,12 +344,15 @@ async fn main() -> anyhow::Result<()> {
         .with_state(app_state);
 
     // 启动服务器
-    let port = std::env::var("PORT").unwrap_or_else(|_| "8080".to_string());
+    let port = std::env::var("PORT")
+        .unwrap_or_else(|_| config_port.to_string())
+        .parse()
+        .unwrap_or_else(|_| config_port);
     let addr = format!("0.0.0.0:{}", port);
     let listener = TcpListener::bind(&addr).await.unwrap();
     // let listener = TcpListener::bind("0.0.0.0:8080").await?;
-    info!("🌐 服务器启动在 http://0.0.0.0:8080");
-    info!("📋 API文档: http://0.0.0.0:8080");
+    info!("🌐 服务器启动在 http://IP:{}", port);
+    info!("📋 API文档: http://IP:{}", port);
     info!("🚀 前端应用请运行: npm run dev");
 
     axum::serve(listener, app).await?;
