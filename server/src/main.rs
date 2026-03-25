@@ -261,27 +261,27 @@ async fn index() -> impl IntoResponse {
     
     <div class="endpoint">
         <div><span class="method">GET</span> <span class="url">/news/{source}</span></div>
-        <div class="description">获取指定新闻源的数据<span style="color: #dc3545;">  (GET /news/bilibili?no_cache=true)</span></div>
+        <div class="description">获取指定新闻源的数据<span style="color: #dc3545;">  (GET /news/bilibili?no_cache=false)</span></div>
     </div>
     
     <h2>📰 支持的新闻源</h2>
     <div class="news-sources">
-        <div class="source"><a href="/news/bilibili?no_cache=true" target="_blank">bilibili</a></div>
-        <div class="source"><a href="/news/weibo?no_cache=true" target="_blank">weibo</a></div>
-        <div class="source"><a href="/news/zhihu?no_cache=true" target="_blank">zhihu</a></div>
-        <div class="source"><a href="/news/github?no_cache=true" target="_blank">github</a></div>
-        <div class="source"><a href="/news/juejin?no_cache=true" target="_blank">juejin</a></div>
-        <div class="source"><a href="/news/douyin?no_cache=true" target="_blank">douyin</a></div>
-        <div class="source"><a href="/news/36kr?no_cache=true" target="_blank">36kr</a></div>
-        <div class="source"><a href="/news/ithome?no_cache=true" target="_blank">ithome</a></div>
-        <div class="source"><a href="/news/segmentfault?no_cache=true" target="_blank">segmentfault</a></div>
-        <div class="source"><a href="/news/oschina?no_cache=true" target="_blank">oschina</a></div>
-        <div class="source"><a href="/news/infoq?no_cache=true" target="_blank">infoq</a></div>
-        <div class="source"><a href="/news/ruanyifeng?no_cache=true" target="_blank">ruanyifeng</a></div>
-        <div class="source"><a href="/news/csdn?no_cache=true" target="_blank">csdn</a></div>
-        <div class="source"><a href="/news/stcn?no_cache=true" target="_blank">stcn</a></div>
-        <div class="source"><a href="/news/caixin?no_cache=true" target="_blank">caixin</a></div>
-        <div class="source"><a href="/news/baidu?no_cache=true" target="_blank">baidu</a></div>
+        <div class="source"><a href="/news/bilibili?no_cache=false" target="_blank">bilibili</a></div>
+        <div class="source"><a href="/news/weibo?no_cache=false" target="_blank">weibo</a></div>
+        <div class="source"><a href="/news/zhihu?no_cache=false" target="_blank">zhihu</a></div>
+        <div class="source"><a href="/news/github?no_cache=false" target="_blank">github</a></div>
+        <div class="source"><a href="/news/juejin?no_cache=false" target="_blank">juejin</a></div>
+        <div class="source"><a href="/news/douyin?no_cache=false" target="_blank">douyin</a></div>
+        <div class="source"><a href="/news/36kr?no_cache=false" target="_blank">36kr</a></div>
+        <div class="source"><a href="/news/ithome?no_cache=false" target="_blank">ithome</a></div>
+        <div class="source"><a href="/news/segmentfault?no_cache=false" target="_blank">segmentfault</a></div>
+        <div class="source"><a href="/news/oschina?no_cache=false" target="_blank">oschina</a></div>
+        <div class="source"><a href="/news/infoq?no_cache=false" target="_blank">infoq</a></div>
+        <div class="source"><a href="/news/ruanyifeng?no_cache=false" target="_blank">ruanyifeng</a></div>
+        <div class="source"><a href="/news/csdn?no_cache=false" target="_blank">csdn</a></div>
+        <div class="source"><a href="/news/stcn?no_cache=false" target="_blank">stcn</a></div>
+        <div class="source"><a href="/news/caixin?no_cache=false" target="_blank">caixin</a></div>
+        <div class="source"><a href="/news/baidu?no_cache=false" target="_blank">baidu</a></div>
     </div>
 </body>
 </html>
