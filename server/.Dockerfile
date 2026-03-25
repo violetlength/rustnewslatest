@@ -69,6 +69,8 @@ COPY --from=builder /app/target/release/newslatest-server /usr/local/bin/
 WORKDIR /app
 COPY config.toml ./config.toml
 
+COPY icon.ico ./icon.ico
+
 # 暴露端口
 EXPOSE 8080
 
