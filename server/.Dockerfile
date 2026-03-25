@@ -42,7 +42,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # 先复制依赖文件，利用 Docker 缓存
-COPY Cargo.toml Cargo.lock ./
+COPY Cargo.toml  ./
 RUN mkdir src && \
     echo "fn main() {}" > src/main.rs && \
     cargo build --release && \
