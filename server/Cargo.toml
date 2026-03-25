@@ -12,6 +12,14 @@ strip = true        # 剥离调试符号
 opt-level = "z"     # 优化体积
 overflow-checks = false
 
+# 图标配置
+[package.metadata.winres]
+original_filename = "newslatest-server.exe"
+internal_name = "newslatest-server"
+file_description = "NewsLatest API Server"
+product_name = "NewsLatest"
+product_version = "0.1.0"
+
 [dependencies]
 tokio = { version = "1.0", features = ["full"] }
 axum = "0.7"
@@ -35,6 +43,9 @@ regex = "1.0"
 serde_with = { version = "3.0", features = ["chrono"] }
 urlencoding = "2.1"
 toml = "0.8"
+
+[target.'cfg(windows)'.build-dependencies]
+winres = "0.1"
 
 [[bin]]
 name = "newslatest-server"

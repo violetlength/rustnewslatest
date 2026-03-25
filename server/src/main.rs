@@ -237,6 +237,8 @@ async fn index() -> impl IntoResponse {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NewsLatest API</title>
+    <link rel="icon" type="image/x-icon" href="/icon.ico">
+    <link rel="shortcut icon" href="/icon.ico">
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; }
         .header { text-align: center; margin-bottom: 40px; }
@@ -285,7 +287,20 @@ async fn index() -> impl IntoResponse {
 </html>
     "#;
     
-    Html(html)
+    ([(header::CONTENT_TYPE, "text/html; charset=utf-8")], html)
+}
+
+// 图标服务
+async fn serve_icon() -> impl IntoResponse {
+    // 尝试读取图标文件
+    match tokio::fs::read("icon.ico").await {
+        Ok(icon_data) => {
+            (StatusCode::OK, [(header::CONTENT_TYPE, "image/x-icon")], icon_data)
+        }
+        Err(_) => {
+            (StatusCode::NOT_FOUND, [(header::CONTENT_TYPE, "text/plain")], "Icon not found".to_string().into_bytes())
+        }
+    }
 }
 
 #[tokio::main]
@@ -329,6 +344,8 @@ async fn main() -> anyhow::Result<()> {
         .route("/api/proxy/image", get(proxy_image))
         // 静态文件和首页
         .route("/", get(index))
+        .route("/icon.ico", get(serve_icon))
+        .route("/favicon.ico", get(serve_icon))
         .route("/health", get(health_check))  // 兼容直接访问
         .route("/news/:source", get(get_news))  // 兼容直接访问
         .route("/cache", delete(clear_cache))  // 兼容直接访问
