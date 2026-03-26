@@ -2476,7 +2476,7 @@ impl NewsService {
                     timestamp: Some(Utc::now().to_rfc3339()),
                     hot: Some(hot),
                     url: full_url.clone(),
-                    mobile_url: Some(full_url.replace("www.toutiao.com", "m.toutiao.com")),
+                    mobile_url: Some(url),
                 });
                 
                 if items.len() >= 20 {
