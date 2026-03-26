@@ -2405,6 +2405,177 @@ impl NewsService {
         })
     }
 
+    pub async fn get_toutiao_hot(&self, no_cache: bool) -> Result<NewsSource, Box<dyn std::error::Error + Send + Sync>> {
+        let cache_key = "toutiao_hot";
+        
+        if !no_cache {
+            if let Some(cached_data) = self.cache.get(cache_key).await {
+                let news_source: NewsSource = serde_json::from_value(cached_data.data)?;
+                return Ok(news_source);
+            }
+        }
+
+        // 今日头条热榜API
+        let url = "https://www.toutiao.com/hot-event/hot-board/?origin=toutiao_pc";
+        
+        let response = self.client
+            .get(url)
+            .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36")
+            .header("Referer", "https://www.toutiao.com/")
+            .send()
+            .await?;
+
+        let response_text = response.text().await?;
+        info!("今日头条API返回数据长度: {} 字符", response_text.len());
+        
+        // 解析JSON响应
+        let json: serde_json::Value = serde_json::from_str(&response_text)?;
+        let mut items = Vec::new();
+        
+        if let Some(data) = json.get("data").and_then(|d| d.as_array()) {
+            for (index, item) in data.iter().enumerate() {
+                let title = item.get("Title")
+                    .and_then(|t| t.as_str())
+                    .unwrap_or("")
+                    .trim()
+                    .to_string();
+                
+                if title.is_empty() {
+                    continue;
+                }
+                
+                let url = item.get("Url")
+                    .and_then(|u| u.as_str())
+                    .unwrap_or("")
+                    .to_string();
+                
+                let hot = item.get("HotValue")
+                    .and_then(|h| h.as_u64())
+                    .unwrap_or(0);
+                
+                let desc = item.get("Abstract")
+                    .and_then(|a| a.as_str())
+                    .unwrap_or("")
+                    .to_string();
+                
+                // 构建完整URL
+                let full_url = if url.starts_with("http") {
+                    url.to_string()
+                } else if url.starts_with("/") {
+                    format!("https://www.toutiao.com{}", url)
+                } else {
+                    format!("https://www.toutiao.com/{}", url)
+                };
+                
+                items.push(NewsItem {
+                    id: format!("toutiao_{}", index + 1),
+                    title,
+                    desc: if desc.is_empty() { None } else { Some(desc) },
+                    cover: None,
+                    author: Some("今日头条".to_string()),
+                    timestamp: Some(Utc::now().to_rfc3339()),
+                    hot: Some(hot),
+                    url: full_url.clone(),
+                    mobile_url: Some(full_url.replace("www.toutiao.com", "m.toutiao.com")),
+                });
+                
+                if items.len() >= 20 {
+                    break;
+                }
+            }
+        } else {
+            warn!("今日头条JSON格式不正确，缺少data字段");
+        }
+        
+        let total = items.len();
+        
+        // 缓存数据
+        let ttl_minutes = 60u64; // 60分钟TTL
+        let expires_at = Utc::now() + chrono::Duration::minutes(ttl_minutes as i64);
+        
+        let news_source = NewsSource {
+            name: "toutiao".to_string(),
+            title: "今日头条".to_string(),
+            description: "今日头条热榜，提供最新最热的新闻资讯和热点事件".to_string(),
+            link: "https://www.toutiao.com".to_string(),
+            items: items.clone(),
+            total,
+            from_cache: false,
+            update_time: Utc::now().to_rfc3339(),
+            expires_at: Some(expires_at.to_rfc3339()),
+            ttl_minutes: Some(ttl_minutes),
+        };
+
+        self.cache.set(cache_key.to_string(), serde_json::to_value(&news_source)?, Some(ttl_minutes * 60)).await;
+
+        Ok(news_source)
+    }
+
+    fn parse_toutiao_html(&self, html: &str) -> Result<Vec<NewsItem>, Box<dyn std::error::Error + Send + Sync>> {
+        use scraper::{Html, Selector};
+        let document = Html::parse_document(html);
+        
+        // 查找 ttp-hot-board 下面的 ol 元素
+        let hot_board_selector = Selector::parse(".ttp-hot-board").unwrap();
+        let ol_selector = Selector::parse("ol").unwrap();
+        let li_selector = Selector::parse("li").unwrap();
+        let title_selector = Selector::parse("a").unwrap();
+        
+        let mut items = Vec::new();
+        
+        // 首先找到热榜容器
+        if let Some(hot_board) = document.select(&hot_board_selector).next() {
+            // 在容器内查找 ol 元素
+            if let Some(ol_element) = hot_board.select(&ol_selector).next() {
+                // 遍历 ol 下的 li 元素
+                for (index, li_element) in ol_element.select(&li_selector).enumerate() {
+                    // 获取标题和链接
+                    let title_and_url = li_element.select(&title_selector)
+                        .next()
+                        .and_then(|a| {
+                            let title = a.text().collect::<Vec<_>>().join("").trim().to_string();
+                            let url = a.value().attr("href").unwrap_or("").to_string();
+                            if !title.is_empty() {
+                                Some((title, url))
+                            } else {
+                                None
+                            }
+                        });
+                    
+                    if let Some((title, url)) = title_and_url {
+                        // 构建完整URL
+                        let full_url = if url.starts_with("http") {
+                            url.to_string()
+                        } else if url.starts_with("/") {
+                            format!("https://www.toutiao.com{}", url)
+                        } else {
+                            format!("https://www.toutiao.com/{}", url)
+                        };
+                        
+                        items.push(NewsItem {
+                            id: format!("toutiao_{}", index + 1),
+                            title,
+                            desc: None,
+                            cover: None,
+                            author: Some("今日头条".to_string()),
+                            timestamp: Some(Utc::now().to_rfc3339()),
+                            hot: Some(0),
+                            url: full_url.clone(),
+                            mobile_url: Some(full_url.replace("www.toutiao.com", "m.toutiao.com")),
+                        });
+                        
+                        if items.len() >= 20 {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        
+        info!("成功解析 {} 个今日头条新闻项", items.len());
+        Ok(items)
+    }
+
     
 
 }

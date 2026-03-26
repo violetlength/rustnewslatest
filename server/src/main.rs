@@ -144,6 +144,7 @@ async fn get_news(
         "stcn" => state.news_service.get_stcn_hot(no_cache).await,
         "caixin" => state.news_service.get_caixin_hot(no_cache).await,
         "baidu" => state.news_service.get_baidu_hot(no_cache).await,
+        "toutiao" => state.news_service.get_toutiao_hot(no_cache).await,
         _ => Err(format!("未知的新闻源: {}", source).into()),
     };
 
@@ -267,6 +268,7 @@ async fn fetch_news_data(state: &AppState, source: &str, no_cache: bool) -> Resu
         "stcn" => state.news_service.get_stcn_hot(no_cache).await,
         "caixin" => state.news_service.get_caixin_hot(no_cache).await,
         "baidu" => state.news_service.get_baidu_hot(no_cache).await,
+        "toutiao" => state.news_service.get_toutiao_hot(no_cache).await,
         _ => return Err(format!("未知的新闻源: {}", source).into()),
     };
     
@@ -406,6 +408,7 @@ async fn index() -> impl IntoResponse {
         <div class="source"><a href="/news/stcn?no_cache=false" target="_blank">stcn</a></div>
         <div class="source"><a href="/news/caixin?no_cache=false" target="_blank">caixin</a></div>
         <div class="source"><a href="/news/baidu?no_cache=false" target="_blank">baidu</a></div>
+        <div class="source"><a href="/news/toutiao?no_cache=false" target="_blank">toutiao</a></div>
     </div>
 </body>
 </html>
