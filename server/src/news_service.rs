@@ -1098,7 +1098,7 @@ impl NewsService {
             .await?;
 
         let response_text = response.text().await?;
-        // println!("oschina response length: {}", response_text.len());
+         println!("oschina response length: {}", response_text.len());
         
         // 解析HTML响应
         let items = self.parse_oschina_html(&response_text).unwrap_or_default();
@@ -1132,7 +1132,7 @@ impl NewsService {
         use scraper::{Html, Selector};
         let document = Html::parse_document(html);
         
-        // 查找所有新闻项，按HTML顺序
+        // 查找所有新闻项
         let item_selector = Selector::parse("div.item.box").unwrap();
         let title_selector = Selector::parse("a.title span.text-ellipsis").unwrap();
         let link_selector = Selector::parse("a.title").unwrap();
@@ -1173,28 +1173,23 @@ impl NewsService {
                 .and_then(|e| e.text().next())
                 .map(|s| s.trim().to_string());
             
-            // 获取日期 - 按照div.from span.mr获取并截取，排除a标签内容
+            // 获取日期 - 从span.mr中提取"发布于"后面的日期
             let date_text = element.select(&date_selector)
                 .next()
                 .and_then(|e| {
-                    // 获取span.mr的完整文本内容（包括子元素的文本）
                     let full_text = e.text().collect::<Vec<_>>().join("").trim().to_string();
-                    // println!("span.mr full text: {}", full_text);
                     
-                    // 从格式"局 发布于 2026-02-28"中获取第二个空格之后的日期
-                    let parts: Vec<&str> = full_text.split_whitespace().collect();
-                    if parts.len() >= 3 {
-                        // 格式：[作者, "发布于", "2026-02-28"]
-                        Some(parts[2].trim().to_string())
-                    } else {
-                        // 如果格式不符合预期，尝试查找"发布于"后面的内容
-                        if let Some(pos) = full_text.find("发布于") {
-                            let date_part = full_text.chars().skip(pos + 3).collect::<String>();
-                            Some(date_part.trim().to_string())
+                    // 查找"发布于"后面的内容
+                    if let Some(pos) = full_text.find("发布于") {
+                        let date_part = full_text.chars().skip(pos + 9).collect::<String>();
+                        let date = date_part.trim().to_string();
+                        if !date.is_empty() {
+                            Some(date)
                         } else {
-                            // 如果没有"发布于"，直接取整个文本
-                            Some(full_text)
+                            None
                         }
+                    } else {
+                        None
                     }
                 });
             
@@ -1228,7 +1223,7 @@ impl NewsService {
             }
         }
         
-        // println!("成功解析 {} 个开源中国新闻项", items.len());
+        println!("成功解析 {} 个开源中国新闻项", items.len());
         Ok(items)
     }
 
@@ -2410,39 +2405,6 @@ impl NewsService {
         })
     }
 
-    // 尝试修复被截断的JSON数据
-    fn try_fix_json(&self, json_text: &str) -> String {
-        let mut fixed = json_text.to_string();
-        
-        // 尝试找到最后一个完整的对象并截断
-        let mut brace_count = 0;
-        let mut last_complete_pos = 0;
-        
-        for (i, ch) in json_text.chars().enumerate() {
-            match ch {
-                '{' => brace_count += 1,
-                '}' => {
-                    brace_count -= 1;
-                    if brace_count == 0 {
-                        last_complete_pos = i + 1;
-                    }
-                }
-                _ => {}
-            }
-        }
-        
-        // 如果找到了完整的JSON结构，截断到最后一个完整位置
-        if last_complete_pos > 0 && last_complete_pos < json_text.len() {
-            fixed = json_text[..last_complete_pos].to_string();
-            
-            // 确保JSON以正确的结构结束
-            if !fixed.ends_with("]}") && fixed.contains("\"data\":[") {
-                fixed.push_str("]}");
-            }
-        }
-        
-        info!("JSON修复：原始长度 {}，修复后长度 {}", json_text.len(), fixed.len());
-        fixed
-    }
+    
 
 }
