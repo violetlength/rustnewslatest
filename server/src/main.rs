@@ -91,6 +91,12 @@ struct NewsQuery {
 }
 
 #[derive(Deserialize)]
+struct CombinedNewsQuery {
+    sources: Option<String>,  // 用逗号分隔的新闻源，如 "baidu,zhihu,weibo"
+    no_cache: Option<bool>,
+}
+
+#[derive(Deserialize)]
 struct ImageQuery {
     url: String,
 }
@@ -159,6 +165,117 @@ async fn get_news(
             warn!("获取新闻数据失败: {} - {}", source, e);
             Json(ApiResponse::error(format!("获取{}失败: {}", source, e)))
         }
+    }
+}
+
+// 获取综合新闻数据
+async fn get_combined_news(
+    State(state): State<AppState>,
+    Query(query): Query<CombinedNewsQuery>,
+) -> impl IntoResponse {
+    let no_cache = query.no_cache.unwrap_or(false);
+    
+    // 解析新闻源，默认使用百度+知乎+微博
+    let sources_str = query.sources.unwrap_or_else(|| "baidu,zhihu,weibo".to_string());
+    let sources: Vec<&str> = sources_str.split(',').map(|s| s.trim()).collect();
+    
+    // 限制最多3个新闻源
+    let limited_sources: Vec<&str> = sources.into_iter().take(3).collect();
+    
+    info!("获取综合新闻: {:?}", limited_sources);
+    
+    let mut combined_results = serde_json::Map::new();
+    let mut total_items = 0;
+    
+    for source in &limited_sources {
+        let cache_key = format!("news:{}", source);
+        
+        // 检查缓存
+        let result = if !no_cache {
+            if let Some(cached) = state.cache.get(&cache_key) {
+                if !cached.is_expired() {
+                    info!("返回缓存的新闻数据: {}", source);
+                    Some(Ok(cached.data.clone()))
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+        
+        let data = if let Some(cached_result) = result {
+            cached_result
+        } else {
+            // 获取新数据
+            fetch_news_data(&state, source, no_cache).await
+        };
+        
+        match data {
+            Ok(news_data) => {
+                if let Some(items) = news_data.get("items").and_then(|v| v.as_array()) {
+                    total_items += items.len();
+                }
+                combined_results.insert(source.to_string(), news_data);
+            }
+            Err(e) => {
+                warn!("获取{}新闻失败: {}", source, e);
+                combined_results.insert(source.to_string(), serde_json::json!({
+                    "error": format!("获取{}失败: {}", source, e),
+                    "items": []
+                }));
+            }
+        }
+    }
+    
+    // 缓存综合结果
+    if !no_cache {
+        let combined_key = format!("combined:{}", sources_str);
+        let combined_data = serde_json::Value::Object(combined_results.clone());
+        let http_cache_ttl = state.config.get_http_cache_ttl();
+        let cached = CachedResponse::new(combined_data.clone(), Duration::from_secs(http_cache_ttl));
+        state.cache.insert(combined_key, cached);
+    }
+    
+    info!("成功获取综合新闻 ({} 个源, {} 条)", limited_sources.len(), total_items);
+    
+    Json(ApiResponse::success(serde_json::json!({
+        "sources": limited_sources,
+        "total_items": total_items,
+        "data": combined_results
+    })))
+}
+
+// 辅助函数：获取单个新闻源的数据
+async fn fetch_news_data(state: &AppState, source: &str, no_cache: bool) -> Result<serde_json::Value, Box<dyn std::error::Error + Send + Sync>> {
+    let result = match source {
+        "bilibili" => state.news_service.get_bilibili_hot(no_cache).await,
+        "weibo" => state.news_service.get_weibo_hot(no_cache).await,
+        "zhihu" => state.news_service.get_zhihu_hot(no_cache).await,
+        "github" => state.news_service.get_github_trending(no_cache).await,
+        "juejin" => state.news_service.get_juejin_hot(no_cache).await,
+        "douyin" => state.news_service.get_douyin_hot(no_cache).await,
+        "36kr" => state.news_service.get_36kr_hot(no_cache).await,
+        "ithome" => state.news_service.get_ithome_hot(no_cache).await,
+        "segmentfault" => state.news_service.get_segmentfault_hot(no_cache).await,
+        "oschina" => state.news_service.get_oschina_hot(no_cache).await,
+        "infoq" => state.news_service.get_infoq_hot(no_cache).await,
+        "ruanyifeng" => state.news_service.get_ruanyifeng_weekly(no_cache).await,
+        "csdn" => state.news_service.get_csdn_hot(no_cache).await,
+        "stcn" => state.news_service.get_stcn_hot(no_cache).await,
+        "caixin" => state.news_service.get_caixin_hot(no_cache).await,
+        "baidu" => state.news_service.get_baidu_hot(no_cache).await,
+        _ => return Err(format!("未知的新闻源: {}", source).into()),
+    };
+    
+    match result {
+        Ok(news_source) => {
+            let data = serde_json::to_value(&news_source).unwrap_or_default();
+            Ok(data)
+        }
+        Err(e) => Err(e)
     }
 }
 
@@ -264,8 +381,15 @@ async fn index() -> impl IntoResponse {
         <div class="description">获取指定新闻源的数据<span style="color: #dc3545;">  (GET /news/bilibili?no_cache=false)</span></div>
     </div>
     
+    <div class="endpoint">
+        <div><span class="method">GET</span> <span class="url">/news/combined</span></div>
+        <div class="description">获取综合新闻数据<span style="color: #dc3545;">  (GET /news/combined?sources=baidu,zhihu,weibo&no_cache=false)</span></div>
+        <div class="description">支持自定义新闻源（最多3个），默认：百度+知乎+微博</div>
+    </div>
+    
     <h2>📰 支持的新闻源</h2>
     <div class="news-sources">
+        <div class="source" style="background: #007bff; color: white;"><a href="/news/combined?no_cache=false" target="_blank" style="color: white;">🔥 综合新闻</a></div>
         <div class="source"><a href="/news/bilibili?no_cache=false" target="_blank">bilibili</a></div>
         <div class="source"><a href="/news/weibo?no_cache=false" target="_blank">weibo</a></div>
         <div class="source"><a href="/news/zhihu?no_cache=false" target="_blank">zhihu</a></div>
@@ -340,6 +464,7 @@ async fn main() -> anyhow::Result<()> {
         // API路由
         .route("/api/health", get(health_check))
         .route("/api/news/:source", get(get_news))
+        .route("/api/news/combined", get(get_combined_news))
         .route("/api/cache", delete(clear_cache))
         .route("/api/proxy/image", get(proxy_image))
         // 静态文件和首页
@@ -348,6 +473,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/favicon.ico", get(serve_icon))
         .route("/health", get(health_check))  // 兼容直接访问
         .route("/news/:source", get(get_news))  // 兼容直接访问
+        .route("/news/combined", get(get_combined_news))  // 兼容直接访问
         .route("/cache", delete(clear_cache))  // 兼容直接访问
         .route("/proxy/image", get(proxy_image))  // 兼容直接访问
         .fallback(index)
