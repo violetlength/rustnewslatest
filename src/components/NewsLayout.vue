@@ -53,7 +53,9 @@ const availableSources = computed<NewsSourceConfig[]>(() => [
   { name: 'ruanyifeng', title: '阮一峰', description: '科技博客周刊', icon: 'Document', color: '#7b68ee' },
   { name: 'csdn', title: 'CSDN', description: 'IT技术社区', icon: 'Code', color: '#cc0000' },
   { name: 'stcn', title: '证券时报', description: '财经媒体', icon: 'TrendCharts', color: '#ff6b00' },
-  { name: 'caixin', title: '财新网', description: '财经媒体', icon: 'Money', color: '#d32f2f' }
+  { name: 'caixin', title: '财新网', description: '财经媒体', icon: 'Money', color: '#d32f2f' },
+  { name: 'baidu', title: '百度', description: '百度热搜', icon: 'Search', color: '#2932e1' },
+  { name: 'toutiao', title: '今日头条', description: '今日头条热点', icon: 'Notification', color: '#ff2d55' }
 ])
 
 const currentNewsSource = computed<NewsSource | undefined>(() => 
