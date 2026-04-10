@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { Refresh, Delete, Menu } from "@element-plus/icons-vue";
+import { ref } from 'vue'
+import { Refresh, Delete, Menu, Setting, MagicStick } from "@element-plus/icons-vue";
+import AIConfigModal from './AIConfigModal.vue'
 
 interface Props {
   activeSource: string;
@@ -10,6 +12,7 @@ interface Emits {
   (e: "refresh"): void;
   (e: "clear-cache"): void;
   (e: "toggle-sidebar"): void;
+  (e: "show-user-sources"): void;
 }
 
 withDefaults(defineProps<Props>(), {
@@ -17,6 +20,13 @@ withDefaults(defineProps<Props>(), {
 });
 
 defineEmits<Emits>();
+
+const showAIConfig = ref(false)
+
+const handleAISaved = (config: any) => {
+  console.log('AI configuration saved:', config)
+  showAIConfig.value = false
+}
 </script>
 
 <template>
@@ -46,6 +56,22 @@ defineEmits<Emits>();
           刷新当前数据
         </el-button>
         <el-button 
+          type="success" 
+          :icon="MagicStick" 
+          @click="showAIConfig = true"
+          title="AI配置"
+        >
+          AI配置
+        </el-button>
+        <el-button 
+          type="warning" 
+          :icon="Setting" 
+          @click="$emit('show-user-sources')"
+          title="管理数据源"
+        >
+          自定义数据源
+        </el-button>
+        <el-button 
           type="danger" 
           :icon="Delete" 
           @click="$emit('clear-cache')"
@@ -55,6 +81,13 @@ defineEmits<Emits>();
         </el-button>
       </div>
     </div>
+    
+    <!-- AI Configuration Modal -->
+    <AIConfigModal 
+      v-if="showAIConfig"
+      @close="showAIConfig = false"
+      @saved="handleAISaved"
+    />
   </header>
 </template>
 

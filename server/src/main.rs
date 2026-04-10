@@ -2,7 +2,7 @@ use axum::{
     extract::{Path, Query, State},
     http::{header, StatusCode},
     response::{Html, IntoResponse, Response, Json},
-    routing::{get, delete},
+    routing::{get, delete, put, post},
     Router,
 };
 use chrono::Utc;
@@ -10,19 +10,31 @@ use dashmap::DashMap;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::net::SocketAddr;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
+use std::pin::Pin;
 use tokio::net::TcpListener;
 use tower_http::cors::{Any, CorsLayer};
-use tracing::{info, warn};
+use tracing::{info, warn, error};
 use types::*;
+use uuid::Uuid;
+use reqwest::Client;
+use anyhow::anyhow;
+use futures::Future;
 
 mod news_service;
 mod types;
 mod cache;
 mod config;
+mod user_source_manager;
+mod ai_config;
+mod ai_client;
+mod web_scraper;
 
 use news_service::NewsService;
+use user_source_manager::UserSourceManager;
+use ai_client::AIClient;
+use web_scraper::WebScraper;
 
 
 
@@ -31,6 +43,7 @@ struct AppState {
     news_service: Arc<NewsService>,
     cache: Arc<DashMap<String, CachedResponse>>,
     config: Arc<config::Config>,
+    user_source_manager: Arc<Mutex<UserSourceManager>>,
 }
 
 // 缓存结构
@@ -56,7 +69,7 @@ impl CachedResponse {
 }
 
 // API响应结构
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 struct ApiResponse<T> {
     success: bool,
     data: Option<T>,
@@ -100,76 +113,827 @@ struct CombinedNewsQuery {
 struct ImageQuery {
     url: String,
 }
-
-// 健康检查
+// 
 async fn health_check() -> impl IntoResponse {
     Json(ApiResponse::success("OK"))
 }
 
-// 获取新闻数据
-async fn get_news(
-    State(state): State<AppState>,
-    Query(query): Query<NewsQuery>,
-    Path(source): Path<String>,
-) -> impl IntoResponse {
-    let no_cache = query.no_cache.unwrap_or(false);
-    let cache_key = format!("news:{}", source);
-    
-    // 检查缓存
-    if !no_cache {
-        if let Some(cached) = state.cache.get(&cache_key) {
-            if !cached.is_expired() {
-                info!("返回缓存的新闻数据: {}", source);
-                return Json(ApiResponse::success(cached.data.clone()));
+async fn get_ai_providers() -> Json<ApiResponse<serde_json::Value>> {
+    match ai_config::AIConfig::load().await {
+        Ok(config) => {
+            // Load the full config file to get providers
+            match std::fs::read_to_string("config/ai_config.json") {
+                Ok(content) => {
+                    match serde_json::from_str::<serde_json::Value>(&content) {
+                        Ok(full_config) => {
+                            if let Some(providers) = full_config.get("ai_providers") {
+                                Json(ApiResponse::success(providers.clone()))
+                            } else {
+                                Json(ApiResponse::error("AI providers not found in config".to_string()))
+                            }
+                        }
+                        Err(e) => Json(ApiResponse::error(format!("Failed to parse config: {}", e)))
+                    }
+                }
+                Err(e) => Json(ApiResponse::error(format!("Failed to read config file: {}", e)))
             }
         }
+        Err(e) => Json(ApiResponse::error(format!("Failed to load AI providers: {}", e))),
     }
+}
 
-    // 获取新数据
-    let ttl_minutes = state.config.get_ttl_for_source(&source);
-    let result = match source.as_str() {
-        "bilibili" => state.news_service.get_bilibili_hot(no_cache).await,
-        "weibo" => state.news_service.get_weibo_hot(no_cache).await,
-        "zhihu" => state.news_service.get_zhihu_hot(no_cache).await,
-        "github" => state.news_service.get_github_trending(no_cache).await,
-        "juejin" => state.news_service.get_juejin_hot(no_cache).await,
-        "douyin" => state.news_service.get_douyin_hot(no_cache).await,
-        "36kr" => state.news_service.get_36kr_hot(no_cache).await,
-        "ithome" => state.news_service.get_ithome_hot(no_cache).await,
-        "segmentfault" => state.news_service.get_segmentfault_hot(no_cache).await,
-        "oschina" => state.news_service.get_oschina_hot(no_cache).await,
-        "infoq" => state.news_service.get_infoq_hot(no_cache).await,
-        "ruanyifeng" => state.news_service.get_ruanyifeng_weekly(no_cache).await,
-        "csdn" => state.news_service.get_csdn_hot(no_cache).await,
-        "stcn" => state.news_service.get_stcn_hot(no_cache).await,
-        "caixin" => state.news_service.get_caixin_hot(no_cache).await,
-        "baidu" => state.news_service.get_baidu_hot(no_cache).await,
-        "toutiao" => state.news_service.get_toutiao_hot(no_cache).await,
-        _ => Err(format!("未知的新闻源: {}", source).into()),
+// AI
+async fn get_ai_config() -> Json<ApiResponse<serde_json::Value>> {
+    match ai_config::AIConfig::load().await {
+        Ok(config) => Json(ApiResponse::success(serde_json::to_value(config).unwrap())),
+        Err(e) => Json(ApiResponse::<serde_json::Value>::error(format!("Failed to load AI config: {}", e))),
+    }
+}
+
+async fn update_ai_config(
+    Json(config): Json<serde_json::Value>
+) -> Json<ApiResponse<String>> {
+    // Wrap the config in current_config structure
+    let wrapped_config = serde_json::json!({
+        "current_config": config
+    });
+    
+    // Save the updated configuration
+    let config_path = "config/ai_config.json";
+    let content = match serde_json::to_string_pretty(&wrapped_config) {
+        Ok(content) => content,
+        Err(e) => return Json(ApiResponse::error(format!("Failed to serialize config: {}", e))),
     };
+    
+    match std::fs::write(config_path, content) {
+        Ok(_) => Json(ApiResponse::success("AI configuration updated successfully".to_string())),
+        Err(e) => Json(ApiResponse::error(format!("Failed to save config: {}", e))),
+    }
+}
 
-    match result {
-        Ok(news_source) => {
-            let data = serde_json::to_value(&news_source).unwrap_or_default();
-            
-            // 缓存结果
-            if !no_cache {
-                let http_cache_ttl = state.config.get_http_cache_ttl();
-                let cached = CachedResponse::new(data.clone(), Duration::from_secs(http_cache_ttl));
-                state.cache.insert(cache_key, cached);
+async fn test_ai_connection() -> Json<ApiResponse<serde_json::Value>> {
+    use crate::ai_client::AIClient;
+    
+    // Try to create AI client and test connection
+    match AIClient::new().await {
+        Ok(ai_client) => {
+            // Test with a simple request
+            let test_prompt = "Respond with 'OK' if you can read this message.";
+            match ai_client.test_connection(test_prompt).await {
+                Ok(response) => {
+                    Json(ApiResponse::success(serde_json::json!({
+                        "success": true,
+                        "message": "AI connection test successful",
+                        "response": response,
+                        "provider": ai_client.get_provider_name(),
+                        "model": ai_client.get_model_name()
+                    })))
+                }
+                Err(e) => {
+                    Json(ApiResponse::error(format!("AI connection test failed: {}", e)))
+                }
             }
-            
-            info!("成功获取新闻数据: {} ({} 条)", source, news_source.items.len());
-            Json(ApiResponse::success(data))
         }
         Err(e) => {
-            warn!("获取新闻数据失败: {} - {}", source, e);
-            Json(ApiResponse::error(format!("获取{}失败: {}", source, e)))
+            Json(ApiResponse::error(format!("Failed to initialize AI client: {}", e)))
         }
     }
 }
 
-// 获取综合新闻数据
+// User Sources
+async fn get_user_sources() -> Json<ApiResponse<serde_json::Value>> {
+    match types::UserSourcesConfig::load().await {
+        Ok(config) => Json(ApiResponse::success(serde_json::to_value(config).unwrap())),
+        Err(e) => Json(ApiResponse::<serde_json::Value>::error(format!("Failed to load user sources: {}", e))),
+    }
+}
+
+async fn update_user_sources(
+    Json(config): Json<serde_json::Value>
+) -> Json<ApiResponse<String>> {
+    // Save the updated configuration
+    let config_path = "data/user_sources.json";
+    let content = match serde_json::to_string_pretty(&config) {
+        Ok(content) => content,
+        Err(e) => return Json(ApiResponse::error(format!("Failed to serialize user sources: {}", e))),
+    };
+    
+    // Ensure directory exists
+    if let Some(parent) = std::path::Path::new(config_path).parent() {
+        if let Err(e) = std::fs::create_dir_all(parent) {
+            return Json(ApiResponse::error(format!("Failed to create directory: {}", e)));
+        }
+    }
+    
+    match std::fs::write(config_path, content) {
+        Ok(_) => Json(ApiResponse::success("User sources updated successfully".to_string())),
+        Err(e) => Json(ApiResponse::error(format!("Failed to save user sources: {}", e))),
+    }
+}
+
+async fn create_user_source(
+    Json(request): Json<serde_json::Value>
+) -> Json<ApiResponse<serde_json::Value>> {
+    // Load existing config
+    let mut config: types::UserSourcesConfig = match types::UserSourcesConfig::load().await {
+        Ok(config) => config,
+        Err(e) => {
+            // If file doesn't exist, create new config
+            if e.kind() == std::io::ErrorKind::NotFound {
+                types::UserSourcesConfig::new()
+            } else {
+                return Json(ApiResponse::error(format!("Failed to load user sources: {}", e)));
+            }
+        }
+    };
+    
+    // Parse the request as CreateUserSourceRequest first
+    let create_request: types::CreateUserSourceRequest = match serde_json::from_value(request) {
+        Ok(req) => req,
+        Err(e) => return Json(ApiResponse::error(format!("Invalid request data: {}", e))),
+    };
+    
+    // Convert string source_type to UserSourceType enum
+    let source_type = match create_request.source_type.as_str() {
+        "json" => types::UserSourceType::Json,
+        "web" => types::UserSourceType::Web,
+        _ => return Json(ApiResponse::error("Invalid source_type. Must be 'json' or 'web'".to_string())),
+    };
+    
+    // Create a new UserNewsSource with auto-generated fields
+    let mut source = types::UserNewsSource::new(
+        create_request.name,
+        create_request.title,
+        create_request.description,
+        source_type.clone(),
+        create_request.url,
+        create_request.selector,
+    );
+    
+    // Generate parsing rules for web sources
+    if matches!(source_type, types::UserSourceType::Web) {
+        info!("Auto-generating parsing rules for new web source: {}", source.name);
+        
+        match generate_parsing_rules_for_source(&mut source).await {
+            Ok(_) => info!("Successfully generated parsing rules for source: {}", source.name),
+            Err(e) => {
+                warn!("Failed to generate parsing rules for source {}: {}, will use AI fallback", source.name, e);
+                // Continue without rules - will use AI fallback
+            }
+        }
+    }
+    
+    // Add the new source
+    config.add_source(source.clone());
+    
+    // Save the updated config
+    if let Err(e) = config.save() {
+        return Json(ApiResponse::error(format!("Failed to save user sources: {}", e)));
+    }
+    
+    Json(ApiResponse::success(serde_json::to_value(source).unwrap()))
+}
+
+async fn delete_user_source(
+    axum::extract::Path(id): axum::extract::Path<String>
+) -> Json<ApiResponse<String>> {
+    info!("Attempting to delete user source with ID: {}", id);
+    
+    // Load existing config
+    let mut config: types::UserSourcesConfig = match types::UserSourcesConfig::load().await {
+        Ok(mut config) => {
+            info!("Loaded config with {} sources", config.user_sources.len());
+            config
+        },
+        Err(e) => {
+            error!("Failed to load user sources: {}", e);
+            return Json(ApiResponse::error(format!("Failed to load user sources: {}", e)));
+        }
+    };
+    
+    // Remove the source
+    match config.remove_source(&id) {
+        Some(removed_source) => {
+            info!("Successfully removed source: {}", removed_source.name);
+            info!("Config now has {} sources", config.user_sources.len());
+            
+            // Save the updated config
+            match config.save() {
+                Ok(_) => {
+                    info!("Successfully saved updated config");
+                    Json(ApiResponse::success("User source deleted successfully".to_string()))
+                },
+                Err(e) => {
+                    error!("Failed to save user sources: {}", e);
+                    Json(ApiResponse::error(format!("Failed to save user sources: {}", e)))
+                }
+            }
+        }
+        None => {
+            error!("User source not found with ID: {}", id);
+            Json(ApiResponse::error("User source not found".to_string()))
+        }
+    }
+}
+
+// Helper function to generate parsing rules for a source
+async fn generate_parsing_rules_for_source(source: &mut types::UserNewsSource) -> Result<(), anyhow::Error> {
+    let ai_client = AIClient::new().await?;
+    let scraper = WebScraper::new();
+    
+    info!("Starting intelligent rule generation for source: {} ({})", source.name, source.url);
+    
+    // Step 1: Fetch and analyze actual data content
+    // For rule generation, we want to analyze the main HTML content, not RSS feeds
+    let html_content = scraper.fetch_html_direct(&source.url).await?;
+    let content_length = html_content.len();
+    info!("Fetched {} bytes of HTML content from {}", content_length, source.url);
+    
+    // Step 2: Analyze content type and structure
+    let content_type = detect_content_type(&html_content);
+    info!("Detected content type: {}", content_type);
+    
+    // Step 3: Try to generate structured extraction rules first (preferred approach)
+    match ai_client.generate_structured_extraction_rules(&source.url, &html_content).await {
+        Ok(mut structured_rules) => {
+            info!("Successfully generated structured extraction rules for source: {}", source.name);
+            
+            // Step 4: Validate and enhance the generated rules
+            if let Err(validation_err) = validate_and_enhance_rules(&mut structured_rules, &html_content).await {
+                warn!("Rule validation failed for {}: {}, attempting to fix", source.name, validation_err);
+                // Try to fix common issues
+                enhance_rules_based_on_content(&mut structured_rules, &html_content, &content_type);
+            }
+            
+            source.parsing_rules = Some(types::ParsingRulesVariant::Structured(structured_rules));
+            Ok(())
+        }
+        Err(e) => {
+            warn!("Failed to generate structured extraction rules for source {}: {}, falling back to legacy rules", source.name, e);
+            
+            // Fallback to legacy rules
+            let rules = ai_client.generate_parsing_rules(&source.url, &html_content).await?;
+            source.parsing_rules = Some(types::ParsingRulesVariant::Legacy(rules));
+            Ok(())
+        }
+    }
+}
+
+// Helper function to detect content type
+fn detect_content_type(html_content: &str) -> String {
+    let content_lower = html_content.to_lowercase();
+    
+    // Check for actual RSS/XML content first
+    if content_lower.contains("<rss") || content_lower.contains("<feed") || 
+       (content_lower.contains("<?xml") && (content_lower.contains("<channel>") || content_lower.contains("<entry>"))) {
+        "RSS/Atom Feed".to_string()
+    } else if content_lower.contains("<article") || content_lower.contains("class=\"article") || content_lower.contains("class=\"post\"") {
+        "Article/Blog".to_string()
+    } else if content_lower.contains("<table") && content_lower.contains("<tr>") && content_lower.contains("<td>") {
+        "Table-based Layout".to_string()
+    } else if content_lower.contains("<ul") && content_lower.contains("<li>") && (content_lower.contains("href") || content_lower.contains("news")) {
+        "List/News".to_string()
+    } else if content_lower.contains("github") && content_lower.contains("repository") {
+        "GitHub".to_string()
+    } else if content_lower.contains("<card") || content_lower.contains("class=\"card") {
+        "Card-based Layout".to_string()
+    } else {
+        "General Web".to_string()
+    }
+}
+
+// Helper function to validate and enhance rules
+async fn validate_and_enhance_rules(
+    rules: &mut types::ExtractionRules,
+    html_content: &str
+) -> Result<(), String> {
+    // Basic validation - check if selectors exist in HTML
+    if !html_content.contains(&rules.selectors.item_list) {
+        return Err(format!("Item list selector '{}' not found in content", rules.selectors.item_list));
+    }
+    
+    // Check if we have required fields
+    if rules.selectors.fields.is_empty() {
+        return Err("No field selectors defined".to_string());
+    }
+    
+    // Validate essential fields exist
+    let essential_fields = ["title", "url"];
+    for field in essential_fields.iter() {
+        if !rules.selectors.fields.contains_key(*field) {
+            return Err(format!("Missing essential field: {}", field));
+        }
+    }
+    
+    Ok(())
+}
+
+// Helper function to enhance rules based on content analysis
+fn enhance_rules_based_on_content(
+    rules: &mut types::ExtractionRules,
+    html_content: &str,
+    content_type: &str
+) {
+    // Add common enhancements based on content type
+    match content_type {
+        "RSS/Atom Feed" => {
+            // Ensure RSS-specific fields
+            rules.selectors.fields.entry("title".to_string()).or_insert_with(|| types::FieldRule {
+                selector: "title".to_string(),
+                attribute: "text".to_string(),
+                required: true,
+                base_url: None,
+                format: None,
+                clean: true,
+            });
+            
+            rules.selectors.fields.entry("url".to_string()).or_insert_with(|| types::FieldRule {
+                selector: "link".to_string(),
+                attribute: "text".to_string(),
+                required: true,
+                base_url: None,
+                format: Some("url".to_string()),
+                clean: true,
+            });
+            
+            rules.selectors.fields.entry("timestamp".to_string()).or_insert_with(|| types::FieldRule {
+                selector: "pubDate".to_string(),
+                attribute: "text".to_string(),
+                required: false,
+                base_url: None,
+                format: Some("datetime".to_string()),
+                clean: true,
+            });
+        }
+        "Article/Blog" => {
+            // Blog-specific enhancements
+            if !rules.selectors.fields.contains_key("author") && html_content.contains("author") {
+                rules.selectors.fields.insert("author".to_string(), types::FieldRule {
+                    selector: ".author, [class*='author'], .byline".to_string(),
+                    attribute: "text".to_string(),
+                    required: false,
+                    base_url: None,
+                    format: None,
+                    clean: true,
+                });
+            }
+        }
+        _ => {
+            // General web enhancements
+            if !rules.selectors.fields.contains_key("description") && html_content.contains("desc") {
+                rules.selectors.fields.insert("description".to_string(), types::FieldRule {
+                    selector: ".description, .desc, .summary".to_string(),
+                    attribute: "text".to_string(),
+                    required: false,
+                    base_url: None,
+                    format: None,
+                    clean: true,
+                });
+            }
+        }
+    }
+}
+
+// Generate parsing rules for user source
+async fn generate_parsing_rules(
+    Json(request): Json<serde_json::Value>
+) -> Json<ApiResponse<serde_json::Value>> {
+    let url: String = match request.get("url").and_then(|v| v.as_str()) {
+        Some(url) => url.to_string(),
+        None => return Json(ApiResponse::error("Missing url field".to_string())),
+    };
+    
+    let source_name: String = match request.get("name").and_then(|v| v.as_str()) {
+        Some(name) => name.to_string(),
+        None => return Json(ApiResponse::error("Missing name field".to_string())),
+    };
+    
+    info!("Generating parsing rules for source: {} ({})", source_name, url);
+    
+    // Initialize AI client and scraper
+    let ai_client = match AIClient::new().await {
+        Ok(client) => client,
+        Err(e) => return Json(ApiResponse::error(format!("Failed to initialize AI client: {}", e))),
+    };
+    
+    let scraper = WebScraper::new();
+    
+    // Fetch HTML content
+    let html_content = match scraper.fetch_html(&url).await {
+        Ok(content) => content,
+        Err(e) => return Json(ApiResponse::error(format!("Failed to fetch web content: {}", e))),
+    };
+    
+    // Generate parsing rules using AI
+    let rules: types::ParsingRules = match ai_client.generate_parsing_rules(&url, &html_content).await {
+        Ok(rules) => rules,
+        Err(e) => return Json(ApiResponse::error(format!("Failed to generate parsing rules: {}", e))),
+    };
+    
+    info!("Successfully generated parsing rules for source: {}", source_name);
+    
+    Json(ApiResponse::success(serde_json::to_value(rules).unwrap()))
+}
+
+// Generate structured extraction rules for user source
+async fn generate_structured_extraction_rules(
+    Json(request): Json<serde_json::Value>
+) -> Json<ApiResponse<serde_json::Value>> {
+    let url: String = match request.get("url").and_then(|v| v.as_str()) {
+        Some(url) => url.to_string(),
+        None => return Json(ApiResponse::error("Missing url field".to_string())),
+    };
+    
+    let source_name: String = match request.get("name").and_then(|v| v.as_str()) {
+        Some(name) => name.to_string(),
+        None => return Json(ApiResponse::error("Missing name field".to_string())),
+    };
+    
+    info!("Generating structured extraction rules for source: {} ({})", source_name, url);
+    
+    // Initialize AI client and scraper
+    let ai_client = match AIClient::new().await {
+        Ok(client) => client,
+        Err(e) => return Json(ApiResponse::error(format!("Failed to initialize AI client: {}", e))),
+    };
+    let scraper = WebScraper::new();
+    
+    // Fetch HTML content
+    let html_content = match scraper.fetch_html(&url).await {
+        Ok(content) => content,
+        Err(e) => return Json(ApiResponse::error(format!("Failed to fetch HTML content: {}", e))),
+    };
+    
+    // Generate structured extraction rules using AI
+    let rules = match ai_client.generate_structured_extraction_rules(&url, &html_content).await {
+        Ok(rules) => rules,
+        Err(e) => return Json(ApiResponse::error(format!("Failed to generate structured extraction rules: {}", e))),
+    };
+    
+    info!("Successfully generated structured extraction rules for source: {}", source_name);
+    Json(ApiResponse::success(serde_json::to_value(rules).unwrap()))
+}
+
+// Extract relevant HTML region from full HTML using selector snippet
+// The selector snippet contains an HTML example that helps identify the correct region
+fn extract_html_region(full_html: &str, selector_snippet: &str) -> Option<String> {
+    use scraper::{Html, Selector};
+    
+    let document = Html::parse_document(full_html);
+    
+    // Extract key features from selector snippet
+    // Look for the first HTML tag and extract its class/id attributes
+    let features = extract_selector_features(selector_snippet);
+    
+    if features.is_empty() {
+        info!("No selector features found in snippet");
+        return None;
+    }
+    
+    info!("Extracted selector features: {:?}", features);
+    
+    // Try each feature combination to find the region
+    for selector_str in features {
+        if let Ok(selector) = Selector::parse(&selector_str) {
+            if let Some(element) = document.select(&selector).next() {
+                info!("Found HTML region using selector: {}", selector_str);
+                return Some(element.html());
+            }
+        }
+    }
+    
+    info!("No matching HTML region found for selector features");
+    None
+}
+
+// Extract CSS selector features from HTML snippet
+fn extract_selector_features(html_snippet: &str) -> Vec<String> {
+    let mut features = Vec::new();
+    
+    // Parse the first tag from snippet
+    if let Some(tag_start) = html_snippet.find('<') {
+        if let Some(tag_end) = html_snippet[tag_start..].find('>') {
+            let tag_content = &html_snippet[tag_start + 1..tag_start + tag_end];
+            
+            // Extract tag name (first word)
+            let tag_name = tag_content.split_whitespace().next().unwrap_or("div");
+            
+            // Extract class attribute
+            let class_value = extract_attribute(tag_content, "class");
+            // Extract id attribute  
+            let id_value = extract_attribute(tag_content, "id");
+            
+            // Build selectors in order of specificity
+            // 1. tag with id (most specific)
+            if let Some(id) = &id_value {
+                features.push(format!("{}#{}", tag_name, id));
+            }
+            
+            // 2. tag with class and id
+            if let (Some(class), Some(id)) = (&class_value, &id_value) {
+                features.push(format!("{}.{}#{}", tag_name, class.split_whitespace().next().unwrap_or(""), id));
+            }
+            
+            // 3. tag with class
+            if let Some(class) = &class_value {
+                let first_class = class.split_whitespace().next().unwrap_or("");
+                features.push(format!("{}.{}", tag_name, first_class));
+                
+                // Also try with all classes
+                let all_classes: Vec<&str> = class.split_whitespace().collect();
+                if all_classes.len() > 1 {
+                    features.push(format!("{}{}", tag_name, all_classes.iter().map(|c| format!(".{}", c)).collect::<String>()));
+                }
+            }
+            
+            // 4. Just the tag (least specific, added last as fallback)
+            if id_value.is_none() && class_value.is_none() {
+                features.push(tag_name.to_string());
+            }
+        }
+    }
+    
+    features
+}
+
+// Extract attribute value from HTML tag string
+fn extract_attribute(tag_content: &str, attr_name: &str) -> Option<String> {
+    let patterns = [
+        format!(r#"{}="([^"]*)""#, attr_name),
+        format!(r"{}='([^']*)'", attr_name),
+        format!(r"{}=([^\s>]+)", attr_name),
+    ];
+    
+    for pattern in patterns {
+        if let Ok(re) = regex::Regex::new(&pattern) {
+            if let Some(caps) = re.captures(tag_content) {
+                if let Some(m) = caps.get(1) {
+                    return Some(m.as_str().to_string());
+                }
+            }
+        }
+    }
+    
+    None
+}
+
+// Parse using stored rules (fast path)
+async fn fetch_user_source_with_rules(
+    source_name: &str, 
+    user_source: &types::UserNewsSource
+) -> Result<NewsSource, anyhow::Error> {
+    info!("Using stored parsing rules for user data source: {}", source_name);
+    
+    let scraper = WebScraper::new();
+    
+    // Fetch HTML content directly (not RSS) for rule-based parsing
+    let full_html = scraper.fetch_html_direct(&user_source.url).await
+        .map_err(|e| anyhow!("Failed to fetch web content: {}", e))?;
+    
+    // Extract the relevant region from HTML using selector field
+    // The selector field contains an HTML snippet that helps identify the correct region
+    let html_content = if let Some(selector_snippet) = &user_source.selector {
+        // Extract key features from selector snippet (e.g., class, id attributes)
+        let region_html = extract_html_region(&full_html, selector_snippet)
+            .unwrap_or_else(|| {
+                info!("Could not extract region using selector, using full HTML");
+                full_html.clone()
+            });
+        
+        if region_html != full_html {
+            info!("Successfully extracted HTML region ({} bytes) from full HTML ({} bytes)", 
+                  region_html.len(), full_html.len());
+        }
+        region_html
+    } else {
+        full_html
+    };
+    
+    // Parse using rules based on variant
+    let news_items = match user_source.parsing_rules.as_ref()
+        .ok_or_else(|| anyhow!("No parsing rules available for source: {}", source_name))? {
+        types::ParsingRulesVariant::Legacy(rules) => {
+            scraper.parse_news_with_rules(&html_content, rules).await
+                .map_err(|e| anyhow!("Rules parsing failed: {}", e))?
+        }
+        types::ParsingRulesVariant::Structured(rules) => {
+            scraper.parse_news_with_structured_rules(&html_content, rules).await
+                .map_err(|e| anyhow!("Structured rules parsing failed: {}", e))?
+        }
+    };
+    
+    info!("Rules parsing successful, got {} news items", news_items.len());
+    
+    Ok(NewsSource {
+        name: source_name.to_string(),
+        title: user_source.title.clone(),
+        description: user_source.description.clone(),
+        link: user_source.url.clone(),
+        items: news_items.clone(),
+        total: news_items.len(),
+        from_cache: false,
+        update_time: chrono::Utc::now().to_rfc3339(),
+        expires_at: None,
+        ttl_minutes: None,
+    })
+}
+
+// Regenerate parsing rules when rules parsing fails
+async fn regenerate_parsing_rules(
+    source_name: &str,
+    user_source: &mut types::UserNewsSource
+) -> Result<(), anyhow::Error> {
+    info!("Regenerating parsing rules for source: {}", source_name);
+    
+    let ai_client = AIClient::new().await
+        .map_err(|e| anyhow!("Failed to initialize AI client: {}", e))?;
+    
+    let scraper = WebScraper::new();
+    
+    // Fetch HTML content directly (not RSS)
+    let html_content = scraper.fetch_html_direct(&user_source.url).await
+        .map_err(|e| anyhow!("Failed to fetch web content: {}", e))?;
+    
+    // Generate new structured rules using AI
+    let mut new_rules = ai_client.generate_structured_extraction_rules(&user_source.url, &html_content).await
+        .map_err(|e| anyhow!("Failed to generate new parsing rules: {}", e))?;
+    
+    // Update statistics
+    new_rules.total_attempts = match user_source.parsing_rules.as_ref() {
+        Some(types::ParsingRulesVariant::Legacy(rules)) => rules.total_attempts + 1,
+        Some(types::ParsingRulesVariant::Structured(rules)) => rules.total_attempts + 1,
+        None => 1,
+    };
+    
+    user_source.parsing_rules = Some(types::ParsingRulesVariant::Structured(new_rules));
+    
+    info!("Successfully regenerated parsing rules for source: {}", source_name);
+    Ok(())
+}
+
+// RustAI
+async fn fetch_user_source_with_ai(source_name: &str, source_url: &str) -> Result<NewsSource, anyhow::Error> {
+    info!("Starting Rust direct AI parsing for user data source: {}", source_name);
+    
+    // AI
+    let ai_client = AIClient::new().await
+        .map_err(|e| anyhow!("Failed to initialize AI client: {}", e))?;
+    let scraper = WebScraper::new();
+    
+    // 
+    let html_content = scraper.fetch_html(source_url).await
+        .map_err(|e| anyhow!("Failed to fetch web content: {}", e))?;
+    
+    // 
+    let user_source = {
+        let config = types::UserSourcesConfig::load().await
+            .map_err(|e| anyhow!("Failed to load user sources: {}", e))?;
+        config.find_source_by_name(source_name)
+            .ok_or_else(|| anyhow!("User data source not found: {}", source_name))?
+            .clone()
+    };
+    
+    let selector = user_source.selector.as_deref();
+    
+    // AI
+    let news_items = ai_client.parse_news_from_html(source_url, &html_content, selector).await
+        .map_err(|e| anyhow!("AI parsing failed: {}", e))?;
+    
+    info!("AI parsing successful, got {} news items", news_items.len());
+    
+    // 
+    Ok(NewsSource {
+        name: source_name.to_string(),
+        title: user_source.title,
+        description: user_source.description,
+        link: source_url.to_string(),
+        items: news_items.clone(),
+        total: news_items.len(),
+        from_cache: false,
+        update_time: chrono::Utc::now().to_rfc3339(),
+        expires_at: None,
+        ttl_minutes: None,
+    })
+}
+
+// 
+async fn get_news_simple(
+    State(state): State<AppState>,
+    Path(source): Path<String>,
+    Query(query): Query<NewsQuery>,
+) -> Json<ApiResponse<NewsSource>> {
+    let no_cache = query.no_cache.unwrap_or(false);
+    
+    // Load existing config
+    let config: types::UserSourcesConfig = match types::UserSourcesConfig::load().await {
+        Ok(config) => config,
+        Err(e) => {
+            // If file doesn't exist, create new config
+            if e.kind() == std::io::ErrorKind::NotFound {
+                types::UserSourcesConfig::new()
+            } else {
+                return Json(ApiResponse::<NewsSource>::error(format!("Failed to load user sources: {}", e)));
+            }
+        }
+    };
+    
+    // Check if it's a user source
+    if let Some(user_source) = config.clone().find_source_by_name(&source) {
+        // It's a user source, try intelligent parsing strategy
+        info!("Detected user source: {}, checking for parsing rules", source);
+        
+        // Strategy 1: Try using stored rules first (fast path)
+        if user_source.parsing_rules.is_some() {
+            info!("Using stored parsing rules for source: {}", source);
+            match fetch_user_source_with_rules(&source, &user_source).await {
+                Ok(news_source) => {
+                    info!("Rules parsing successful for source: {}, got {} news items", source, news_source.items.len());
+                    return Json(ApiResponse::success(news_source));
+                }
+                Err(e) => {
+                    warn!("Rules parsing failed for source: {}, regenerating rules: {}", source, e);
+                    
+                    // Strategy 2: Regenerate rules and try again
+                    let mut user_source_mut = user_source.clone();
+                    match regenerate_parsing_rules(&source, &mut user_source_mut).await {
+                        Ok(_) => {
+                            // Save updated rules
+                            let mut config_mut = config;
+                            if let Some(index) = config_mut.user_sources.iter().position(|s| s.name == source) {
+                                config_mut.user_sources[index] = user_source_mut.clone();
+                                if let Err(save_err) = config_mut.save() {
+                                    error!("Failed to save updated parsing rules: {}", save_err);
+                                }
+                            }
+                            
+                            // Try parsing with new rules
+                            match fetch_user_source_with_rules(&source, &user_source_mut).await {
+                                Ok(news_source) => {
+                                    info!("New rules parsing successful for source: {}, got {} news items", source, news_source.items.len());
+                                    return Json(ApiResponse::success(news_source));
+                                }
+                                Err(rules_err) => {
+                                    warn!("New rules parsing also failed for source: {}, falling back to AI: {}", source, rules_err);
+                                }
+                            }
+                        }
+                        Err(regen_err) => {
+                            warn!("Failed to regenerate rules for source: {}, falling back to AI: {}", source, regen_err);
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Strategy 3: Fallback to AI parsing
+        info!("Using AI parsing fallback for source: {}", source);
+        match fetch_user_source_with_ai(&source, &user_source.url).await {
+            Ok(news_source) => {
+                info!("AI parsing successful for source: {}, got {} news items", source, news_source.items.len());
+                Json(ApiResponse::success(news_source))
+            }
+            Err(e) => {
+                error!("All parsing strategies failed for source: {}", source);
+                Json(ApiResponse::<NewsSource>::error(format!("User source parsing failed: {}", e)))
+            }
+        }
+    } else {
+        // Not a user source, use predefined sources logic
+        let result = match source.as_str() {
+            "bilibili" => state.news_service.get_bilibili_hot(no_cache).await.map_err(|e| anyhow::anyhow!(e)),
+            "weibo" => state.news_service.get_weibo_hot(no_cache).await.map_err(|e| anyhow::anyhow!(e)),
+            "zhihu" => state.news_service.get_zhihu_hot(no_cache).await.map_err(|e| anyhow::anyhow!(e)),
+            "github" => state.news_service.get_github_trending(no_cache).await.map_err(|e| anyhow::anyhow!(e)),
+            "juejin" => state.news_service.get_juejin_hot(no_cache).await.map_err(|e| anyhow::anyhow!(e)),
+            "douyin" => state.news_service.get_douyin_hot(no_cache).await.map_err(|e| anyhow::anyhow!(e)),
+            "36kr" => state.news_service.get_36kr_hot(no_cache).await.map_err(|e| anyhow::anyhow!(e)),
+            "ithome" => state.news_service.get_ithome_hot(no_cache).await.map_err(|e| anyhow::anyhow!(e)),
+            "segmentfault" => state.news_service.get_segmentfault_hot(no_cache).await.map_err(|e| anyhow::anyhow!(e)),
+            "oschina" => state.news_service.get_oschina_hot(no_cache).await.map_err(|e| anyhow::anyhow!(e)),
+            "infoq" => state.news_service.get_infoq_hot(no_cache).await.map_err(|e| anyhow::anyhow!(e)),
+            "ruanyifeng" => state.news_service.get_ruanyifeng_weekly(no_cache).await.map_err(|e| anyhow::anyhow!(e)),
+            "csdn" => state.news_service.get_csdn_hot(no_cache).await.map_err(|e| anyhow::anyhow!(e)),
+            "stcn" => state.news_service.get_stcn_hot(no_cache).await.map_err(|e| anyhow::anyhow!(e)),
+            "caixin" => state.news_service.get_caixin_hot(no_cache).await.map_err(|e| anyhow::anyhow!(e)),
+            "baidu" => state.news_service.get_baidu_hot(no_cache).await.map_err(|e| anyhow::anyhow!(e)),
+            "toutiao" => state.news_service.get_toutiao_hot(no_cache).await.map_err(|e| anyhow::anyhow!(e)),
+            _ => Err(anyhow::anyhow!("Unsupported data source: {}", source)),
+        };
+
+        match result {
+            Ok(news_source) => {
+                info!("预定义数据源 {} ({})", source, news_source.items.len());
+                Json(ApiResponse::success(news_source))
+            }
+            Err(e) => {
+                warn!("预定义数据源获取失败 {} - {}", source, e);
+                Json(ApiResponse::<NewsSource>::error(format!("数据源获取失败: {}", e)))
+            }
+        }
+    }
+}
+// ...
+// 
 async fn get_combined_news(
     State(state): State<AppState>,
     Query(query): Query<CombinedNewsQuery>,
@@ -430,6 +1194,38 @@ async fn serve_icon() -> impl IntoResponse {
     }
 }
 
+// // 获取用户数据源列表
+// async fn get_user_sources(State(state): State<AppState>) -> impl IntoResponse {
+//     let user_manager = state.user_source_manager.lock().unwrap();
+//     let sources = user_manager.get_sources();
+//     Json(ApiResponse::success(sources))
+// }
+
+// // 创建用户数据源
+// async fn create_user_source(
+//     State(state): State<AppState>,
+//     Json(request): Json<CreateUserSourceRequest>,
+// ) -> impl IntoResponse {
+//     let mut user_manager = state.user_source_manager.lock().unwrap();
+//     match user_manager.add_source(request) {
+//         Ok(source) => Json(ApiResponse::success(source)),
+//         Err(e) => Json(ApiResponse::error(e.to_string())),
+//     }
+// }
+
+// // 删除用户数据源
+// async fn delete_user_source(
+//     State(state): State<AppState>,
+//     Path(id): Path<String>,
+// ) -> impl IntoResponse {
+//     let mut user_manager = state.user_source_manager.lock().unwrap();
+//     match user_manager.remove_source(&id) {
+//         Ok(Some(source)) => Json(ApiResponse::success(source)),
+//         Ok(None) => Json(ApiResponse::error("数据源不存在".to_string())),
+//         Err(e) => Json(ApiResponse::error(e.to_string())),
+//     }
+// }
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     // 初始化日志
@@ -456,38 +1252,46 @@ async fn main() -> anyhow::Result<()> {
     
     let news_service = Arc::new(NewsService::with_config((*config).clone()));
     
+    // 初始化用户数据源管理器
+    let user_source_manager = Arc::new(Mutex::new(UserSourceManager::new("data/user_sources.json")?));
+    
     let app_state = AppState {
         news_service,
         cache: Arc::new(DashMap::new()),
         config,
+        user_source_manager,
     };
 
     // 创建路由
     let app = Router::new()
         // API路由
         .route("/api/health", get(health_check))
-        .route("/api/news/:source", get(get_news))
+        .route("/api/news/:source", get(get_news_simple))
         .route("/api/news/combined", get(get_combined_news))
         .route("/api/cache", delete(clear_cache))
         .route("/api/proxy/image", get(proxy_image))
+        // AI配置管理API
+        .route("/api/ai-config", get(get_ai_config).post(update_ai_config))
+        .route("/api/ai-providers", get(get_ai_providers))
+        .route("/api/ai-test", post(test_ai_connection))
+        // 用户数据源管理API
+        .route("/api/user-sources", get(get_user_sources).post(create_user_source))
+        .route("/api/user-sources/:id", delete(delete_user_source))
+        .route("/api/user-sources/generate-rules", post(generate_parsing_rules))
+        .route("/api/user-sources/generate-structured-rules", post(generate_structured_extraction_rules))
         // 静态文件和首页
         .route("/", get(index))
         .route("/icon.ico", get(serve_icon))
-        .route("/favicon.ico", get(serve_icon))
-        .route("/health", get(health_check))  // 兼容直接访问
-        .route("/news/:source", get(get_news))  // 兼容直接访问
-        .route("/news/combined", get(get_combined_news))  // 兼容直接访问
-        .route("/cache", delete(clear_cache))  // 兼容直接访问
-        .route("/proxy/image", get(proxy_image))  // 兼容直接访问
         .fallback(index)
         // CORS配置
         .layer(
             CorsLayer::new()
                 .allow_origin(Any)
                 .allow_methods(Any)
-                .allow_headers(Any),
+                .allow_headers(Any)
+                .allow_credentials(false),
         )
-        .with_state(app_state);
+                .with_state(app_state);
 
     // 启动服务器
     let port = std::env::var("PORT")

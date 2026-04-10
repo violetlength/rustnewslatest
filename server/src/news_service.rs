@@ -1,12 +1,15 @@
 use reqwest::Client;
 use scraper::{Html, Selector};
 use crate::cache::Cache;
-use crate::types::{NewsItem, NewsSource};
-use std::time::Duration;
-use chrono::{DateTime, Utc,  NaiveDate, NaiveDateTime, FixedOffset, TimeZone};
+use crate::types::{NewsSource, NewsItem};
+use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
+type JsonArray = Vec<Value>;
+use chrono::{DateTime, Utc, NaiveDate, NaiveDateTime, FixedOffset, TimeZone};
 use serde_with::chrono::NaiveTime;
 use crate::config::Config;
 use tracing::{info, warn};
+use std::time::Duration;
 
 pub struct NewsService {
     client: Client,
@@ -2282,116 +2285,81 @@ impl NewsService {
 
         let json_text = response.text().await?;
         
-        // 记录原始数据长度以便调试
-        info!("百度API返回数据长度: {} 字符", json_text.len());
+        // 
+        info!(": {} ", json_text.len());
         
-        // 检查数据是否包含预期的结构
-        if !json_text.contains("\"data\":[") {
-            warn!("百度API返回数据不包含预期的data结构");
-            return self.create_empty_baidu_result();
-        }
+        // 
+        let safe_end = json_text.len().min(200);
+        let safe_truncated = if safe_end < json_text.len() {
+            // 
+            let mut end = safe_end;
+            while end > 0 && !json_text.is_char_boundary(end) {
+                end -= 1;
+            }
+            &json_text[..end]
+        } else {
+            &json_text
+        };
+        info!(": {}", safe_truncated);
         
-        // 尝试找到JSON的结束位置，确保数据完整
-        let json_end = json_text.rfind("]}").map(|pos| pos + 2).unwrap_or(json_text.len());
-        let trimmed_json = &json_text[..json_end];
-        
-        info!("截取后的JSON长度: {} 字符", trimmed_json.len());
-        
-        // 直接尝试解析JSON
-        let json_data: serde_json::Value = serde_json::from_str(trimmed_json)
+        // JSON
+        let json_data: serde_json::Value = serde_json::from_str(&json_text)
             .map_err(|e| {
-                warn!("解析百度热搜JSON失败: {}, 数据前100字符: {}", e, &trimmed_json[..trimmed_json.len().min(100)]);
+                warn!(": {}, : {}", e, safe_truncated);
                 e
             })?;
         
-        let items = self.parse_baidu_json(&json_data).unwrap_or_default();
-
-        let total = items.len();
-        
-        // 缓存数据
-        let ttl_minutes = self.config.get_ttl_for_source("baidu");
-        let expires_at = chrono::Utc::now() + chrono::Duration::minutes(ttl_minutes as i64);
-        
-        let news_source = NewsSource {
-            name: "baidu".to_string(),
-            title: "百度热搜".to_string(),
-            description: "百度实时热搜榜单，反映当前最热门的搜索关键词".to_string(),
-            link: "https://top.baidu.com/board?tab=realtime".to_string(),
-            items: items.clone(),
-            total,
-            from_cache: false,
-            update_time: Utc::now().to_rfc3339(),
-            expires_at: Some(expires_at.to_rfc3339()),
-            ttl_minutes: Some(ttl_minutes),
-        };
-
-        self.cache.set(cache_key.to_string(), serde_json::to_value(&news_source)?, Some(ttl_minutes * 60)).await;
-
-        Ok(news_source)
-    }
-
-    fn parse_baidu_json(&self, json_data: &serde_json::Value) -> Result<Vec<NewsItem>, Box<dyn std::error::Error + Send + Sync>> {
-        let mut items = Vec::new();
-        
-        // 直接获取data数组
-        if let Some(data_array) = json_data.get("data").and_then(|d| d.as_array()) {
-            info!("百度热搜data数组长度: {}", data_array.len());
+        // data
+        let data_value = json_data.get("data");
+        if let Some(data) = data_value {
+            info!("成功获取data字段，类型: {:?}", data);
             
-            // 只取前20条记录
-            for (index, item) in data_array.iter().take(20).enumerate() {
-                // 使用最简单的方式提取字段
-                let title = item.get("title")
-                    .and_then(|t| t.as_str())
-                    .unwrap_or("未知标题")
-                    .to_string();
-                    
-                let url = item.get("url")
-                    .and_then(|u| u.as_str())
-                    .unwrap_or("")
-                    .to_string();
-                    
-                let hot_str = item.get("hot")
-                    .and_then(|h| h.as_str())
-                    .unwrap_or("0");
-                let hot = hot_str.parse::<u64>().unwrap_or(0);
-                    
-                let desc = item.get("desc")
-                    .and_then(|d| d.as_str())
-                    .unwrap_or("")
-                    .to_string();
-                    
-                let pic = item.get("pic")
-                    .and_then(|p| p.as_str())
-                    .unwrap_or("")
-                    .to_string();
+            // 检查data是否为数组
+            if let Some(data_array) = data.as_array() {
+                info!("百度热搜data数组长度: {}", data_array.len());
                 
-                // 只有当URL不为空时才添加新闻项
-                if !url.is_empty() {
-                    let news_item = NewsItem {
-                        id: (index + 1).to_string(),
-                        title,
-                        desc: Some(desc),
-                        cover: if pic.is_empty() { None } else { Some(pic) },
-                        author: Some("百度热搜".to_string()),
-                        timestamp: Some(Utc::now().to_rfc3339()),
-                        hot: Some(hot),
-                        url: url.clone(),
-                        mobile_url: Some(url),
-                    };
-                    
-                    items.push(news_item);
+                // 验证数组不为空
+                if data_array.is_empty() {
+                    warn!("百度热搜data数组为空");
+                    return self.create_empty_baidu_result();
                 }
+                
+                // 直接使用data数组创建NewsItem
+                let items = self.parse_baidu_data_array(data_array)?;
+                
+                let total = items.len();
+                
+                // 缓存数据
+                let ttl_minutes = self.config.get_ttl_for_source("baidu");
+                let expires_at = chrono::Utc::now() + chrono::Duration::minutes(ttl_minutes as i64);
+                
+                let news_source = NewsSource {
+                    name: "baidu".to_string(),
+                    title: "百度热搜".to_string(),
+                    description: "百度实时热搜榜单，反映当前最热门的搜索关键词".to_string(),
+                    link: "https://top.baidu.com/board?tab=realtime".to_string(),
+                    items,
+                    total,
+                    from_cache: false,
+                    update_time: Utc::now().to_rfc3339(),
+                    expires_at: Some(expires_at.to_rfc3339()),
+                    ttl_minutes: Some(ttl_minutes),
+                };
+                
+                info!("成功解析百度热搜数据，共 {} 条记录", total);
+                return Ok(news_source);
+            } else {
+                warn!("百度热搜data字段不是数组类型: {:?}", data);
+                return self.create_empty_baidu_result();
             }
         } else {
-            warn!("百度热搜JSON格式不正确，缺少data字段");
+            warn!("百度热搜JSON中缺少data字段");
+            return self.create_empty_baidu_result();
         }
-        
-        info!("成功解析百度热搜数据，共 {} 条记录", items.len());
-        Ok(items)
     }
 
     fn create_empty_baidu_result(&self) -> Result<NewsSource, Box<dyn std::error::Error + Send + Sync>> {
-        Ok(NewsSource {
+        let news_source = NewsSource {
             name: "baidu".to_string(),
             title: "百度热搜".to_string(),
             description: "百度实时热搜榜单，反映当前最热门的搜索关键词".to_string(),
@@ -2402,7 +2370,61 @@ impl NewsService {
             update_time: Utc::now().to_rfc3339(),
             expires_at: None,
             ttl_minutes: Some(5),
-        })
+        };
+        Ok(news_source)
+    }
+
+    fn parse_baidu_data_array(&self, data_array: &JsonArray) -> Result<Vec<NewsItem>, Box<dyn std::error::Error + Send + Sync>> {
+        let mut items = Vec::new();
+        
+        // 只取前20条记录
+        for (index, item) in data_array.iter().take(20).enumerate() {
+            // 使用最简单的方式提取字段
+            let title: String = item.get("title")
+                .and_then(|v| v.as_str())
+                .unwrap_or("unknown_title")
+                .to_string();
+                
+            let url = item.get("url")
+                .and_then(|v: &Value| v.as_str())
+                .unwrap_or("")
+                .to_string();
+                
+            let hot_str = item.get("hot")
+                .and_then(|v: &Value| v.as_str())
+                .unwrap_or("0");
+            let hot = hot_str.parse::<u64>().unwrap_or(0);
+            
+            let desc = item.get("desc")
+                .and_then(|v: &Value| v.as_str())
+                .unwrap_or("")
+                .to_string();
+                
+            let pic = item.get("pic")
+                .and_then(|v: &Value| v.as_str())
+                .unwrap_or("")
+                .to_string();
+            
+            // 只有当URL不为空时才添加新闻项
+            if !url.is_empty() {
+                let news_item = NewsItem {
+                    id: format!("{}", index + 1),
+                    title,
+                    desc: Some(desc),
+                    cover: if pic.is_empty() { None } else { Some(pic) },
+                    author: Some("百度热搜".to_string()),
+                    timestamp: Some(Utc::now().to_rfc3339()),
+                    hot: Some(hot),
+                    url: url.clone(),
+                    mobile_url: Some(url),
+                };
+                
+                items.push(news_item);
+            }
+        }
+        
+        info!("成功解析百度热搜数组，共 {} 条记录", items.len());
+        Ok(items)
     }
 
     pub async fn get_toutiao_hot(&self, no_cache: bool) -> Result<NewsSource, Box<dyn std::error::Error + Send + Sync>> {
