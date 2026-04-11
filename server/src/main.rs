@@ -343,11 +343,16 @@ async fn generate_parsing_rules_for_source(source: &mut types::UserNewsSource) -
     
     info!("Starting intelligent rule generation for source: {} ({})", source.name, source.url);
     
-    // Step 1: Fetch and analyze actual data content
-    // For rule generation, we want to analyze the main HTML content, not RSS feeds
-    let html_content = scraper.fetch_html_direct(&source.url).await?;
-    let content_length = html_content.len();
-    info!("Fetched {} bytes of HTML content from {}", content_length, source.url);
+    // Step 1: Use selector field if available, otherwise fetch HTML
+    // For rule generation, we want to analyze the selector snippet if provided
+    let html_content = if let Some(selector_snippet) = &source.selector {
+        info!("Using selector snippet ({} bytes) instead of fetching full HTML", selector_snippet.len());
+        selector_snippet.clone()
+    } else {
+        let content = scraper.fetch_html_direct(&source.url, true).await?;
+        info!("Fetched {} bytes of HTML content from {}", content.len(), source.url);
+        content
+    };
     
     // Step 2: Analyze content type and structure
     let content_type = detect_content_type(&html_content);
@@ -519,7 +524,7 @@ async fn generate_parsing_rules(
     let scraper = WebScraper::new();
     
     // Fetch HTML content
-    let html_content = match scraper.fetch_html(&url).await {
+    let html_content = match scraper.fetch_html(&url, true).await {
         Ok(content) => content,
         Err(e) => return Json(ApiResponse::error(format!("Failed to fetch web content: {}", e))),
     };
@@ -549,6 +554,8 @@ async fn generate_structured_extraction_rules(
         None => return Json(ApiResponse::error("Missing name field".to_string())),
     };
     
+    let selector: Option<String> = request.get("selector").and_then(|v| v.as_str()).map(|s| s.to_string());
+    
     info!("Generating structured extraction rules for source: {} ({})", source_name, url);
     
     // Initialize AI client and scraper
@@ -556,12 +563,20 @@ async fn generate_structured_extraction_rules(
         Ok(client) => client,
         Err(e) => return Json(ApiResponse::error(format!("Failed to initialize AI client: {}", e))),
     };
-    let scraper = WebScraper::new();
     
-    // Fetch HTML content
-    let html_content = match scraper.fetch_html(&url).await {
-        Ok(content) => content,
-        Err(e) => return Json(ApiResponse::error(format!("Failed to fetch HTML content: {}", e))),
+    // Use selector if provided, otherwise fetch HTML
+    let html_content = if let Some(selector_snippet) = selector {
+        info!("Using provided selector snippet ({} bytes) instead of fetching HTML", selector_snippet.len());
+        selector_snippet
+    } else {
+        let scraper = WebScraper::new();
+        match scraper.fetch_html(&url, true).await {
+            Ok(content) => {
+                info!("Fetched {} bytes of HTML content from {}", content.len(), url);
+                content
+            },
+            Err(e) => return Json(ApiResponse::error(format!("Failed to fetch HTML content: {}", e))),
+        }
     };
     
     // Generate structured extraction rules using AI
@@ -687,8 +702,10 @@ async fn fetch_user_source_with_rules(
     let scraper = WebScraper::new();
     
     // Fetch HTML content directly (not RSS) for rule-based parsing
-    let full_html = scraper.fetch_html_direct(&user_source.url).await
+    let full_html = scraper.fetch_html_direct(&user_source.url, true).await
         .map_err(|e| anyhow!("Failed to fetch web content: {}", e))?;
+
+            // info!("full_html:{}",full_html);
     
     // Extract the relevant region from HTML using selector field
     // The selector field contains an HTML snippet that helps identify the correct region
@@ -699,6 +716,8 @@ async fn fetch_user_source_with_rules(
                 info!("Could not extract region using selector, using full HTML");
                 full_html.clone()
             });
+
+            // info!("region_html:{}",region_html);
         
         if region_html != full_html {
             info!("Successfully extracted HTML region ({} bytes) from full HTML ({} bytes)", 
@@ -750,9 +769,16 @@ async fn regenerate_parsing_rules(
     
     let scraper = WebScraper::new();
     
-    // Fetch HTML content directly (not RSS)
-    let html_content = scraper.fetch_html_direct(&user_source.url).await
-        .map_err(|e| anyhow!("Failed to fetch web content: {}", e))?;
+    // Use selector field if available, otherwise fetch HTML
+    let html_content = if let Some(selector_snippet) = &user_source.selector {
+        info!("Using selector snippet ({} bytes) instead of fetching full HTML", selector_snippet.len());
+        selector_snippet.clone()
+    } else {
+        let content = scraper.fetch_html_direct(&user_source.url, true).await
+            .map_err(|e| anyhow!("Failed to fetch web content: {}", e))?;
+        info!("Fetched {} bytes of HTML content from {}", content.len(), user_source.url);
+        content
+    };
     
     // Generate new structured rules using AI
     let mut new_rules = ai_client.generate_structured_extraction_rules(&user_source.url, &html_content).await
@@ -781,10 +807,6 @@ async fn fetch_user_source_with_ai(source_name: &str, source_url: &str) -> Resul
     let scraper = WebScraper::new();
     
     // 
-    let html_content = scraper.fetch_html(source_url).await
-        .map_err(|e| anyhow!("Failed to fetch web content: {}", e))?;
-    
-    // 
     let user_source = {
         let config = types::UserSourcesConfig::load().await
             .map_err(|e| anyhow!("Failed to load user sources: {}", e))?;
@@ -793,11 +815,30 @@ async fn fetch_user_source_with_ai(source_name: &str, source_url: &str) -> Resul
             .clone()
     };
     
-    let selector = user_source.selector.as_deref();
-    
-    // AI
-    let news_items = ai_client.parse_news_from_html(source_url, &html_content, selector).await
-        .map_err(|e| anyhow!("AI parsing failed: {}", e))?;
+    let news_items = match user_source.source_type.as_str() {
+        "json" => {
+            // For JSON API sources, fetch and parse JSON directly
+            info!("Fetching JSON API content from: {}", source_url);
+            let json_content = scraper.fetch_html_direct(source_url, true).await
+                .map_err(|e| anyhow!("Failed to fetch JSON content: {}", e))?;
+            
+            ai_client.parse_news_from_json(source_url, &json_content).await
+                .map_err(|e| anyhow!("AI JSON parsing failed: {}", e))?
+        }
+        "web" => {
+            // For web sources, fetch HTML and parse
+            info!("Fetching HTML content from: {}", source_url);
+            let html_content = scraper.fetch_html(source_url, true).await
+                .map_err(|e| anyhow!("Failed to fetch web content: {}", e))?;
+            
+            let selector = user_source.selector.as_deref();
+            ai_client.parse_news_from_html(source_url, &html_content, selector).await
+                .map_err(|e| anyhow!("AI HTML parsing failed: {}", e))?
+        }
+        _ => {
+            return Err(anyhow!("Unsupported source type: {}", user_source.source_type));
+        }
+    };
     
     info!("AI parsing successful, got {} news items", news_items.len());
     

@@ -270,4 +270,4 @@ cargo test
 
 ---
 
-**Made with ❤️ by RustNewsLatest Team**
+**Made with ❤️ by violetlength**

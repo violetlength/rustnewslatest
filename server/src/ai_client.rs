@@ -65,6 +65,166 @@ impl AIClient {
         self.parse_ai_response(&response, url)
     }
 
+    pub async fn parse_news_from_json(
+        &self,
+        url: &str,
+        json_content: &str,
+    ) -> Result<Vec<NewsItem>> {
+        if !self.config.current_config.enabled {
+            return Err(anyhow!("AI parsing is not enabled"));
+        }
+
+        info!("Parsing JSON content from API: {}", url);
+        
+        // Parse JSON to extract news items
+        let json_value: serde_json::Value = serde_json::from_str(json_content)
+            .map_err(|e| anyhow!("Failed to parse JSON content: {}", e))?;
+        
+        // Try to extract news items from JSON structure
+        let news_items = self.extract_news_from_json_structure(&json_value, url)?;
+        
+        info!("Successfully extracted {} news items from JSON", news_items.len());
+        Ok(news_items)
+    }
+
+    fn extract_news_from_json_structure(&self, json_value: &serde_json::Value, base_url: &str) -> Result<Vec<NewsItem>> {
+        let mut news_items = Vec::new();
+        
+        // Try different common JSON structures for news APIs
+        if let Some(data) = json_value.get("data").and_then(|v| v.as_array()) {
+            // Structure like {"data": [...]}
+            for item in data {
+                if let Some(news_item) = self.parse_json_news_item(item, base_url)? {
+                    news_items.push(news_item);
+                }
+            }
+        } else if let Some(items) = json_value.get("items").and_then(|v| v.as_array()) {
+            // Structure like {"items": [...]}
+            for item in items {
+                if let Some(news_item) = self.parse_json_news_item(item, base_url)? {
+                    news_items.push(news_item);
+                }
+            }
+        } else if let Some(articles) = json_value.get("articles").and_then(|v| v.as_array()) {
+            // Structure like {"articles": [...]}
+            for item in articles {
+                if let Some(news_item) = self.parse_json_news_item(item, base_url)? {
+                    news_items.push(news_item);
+                }
+            }
+        } else if let Some(list) = json_value.as_array() {
+            // Direct array structure [...]
+            for item in list {
+                if let Some(news_item) = self.parse_json_news_item(item, base_url)? {
+                    news_items.push(news_item);
+                }
+            }
+        } else {
+            // If no standard structure found, try to use AI to parse
+            return self.use_ai_for_json_parsing(json_value, base_url);
+        }
+        
+        Ok(news_items)
+    }
+
+    fn parse_json_news_item(&self, item: &serde_json::Value, base_url: &str) -> Result<Option<NewsItem>> {
+        // Try to extract common fields
+        let title = item.get("title")
+            .or_else(|| item.get("name"))
+            .or_else(|| item.get("headline"))
+            .and_then(|v| v.as_str())
+            .unwrap_or("无标题")
+            .to_string();
+
+        let url = item.get("url")
+            .or_else(|| item.get("link"))
+            .or_else(|| item.get("permalink"))
+            .and_then(|v| v.as_str())
+            .unwrap_or(base_url)
+            .to_string();
+
+        let description = item.get("description")
+            .or_else(|| item.get("summary"))
+            .or_else(|| item.get("content"))
+            .or_else(|| item.get("excerpt"))
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
+
+        let author = item.get("author")
+            .or_else(|| item.get("user"))
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string());
+
+        let timestamp = item.get("published_at")
+            .or_else(|| item.get("created_at"))
+            .or_else(|| item.get("date"))
+            .or_else(|| item.get("timestamp"))
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string());
+
+        // Only return item if it has at least title and url
+        if !title.is_empty() && !url.is_empty() {
+            Ok(Some(NewsItem {
+                title,
+                url,
+                description,
+                author,
+                timestamp,
+                hot: None,
+                cover: None,
+            }))
+        } else {
+            Ok(None)
+        }
+    }
+
+    fn use_ai_for_json_parsing(&self, json_value: &serde_json::Value, base_url: &str) -> Result<Vec<NewsItem>> {
+        // Fallback: Use AI to parse the JSON structure
+        let json_str = serde_json::to_string(json_value)
+            .map_err(|e| anyhow!("Failed to serialize JSON for AI parsing: {}", e))?;
+        
+        let prompt = format!(
+            r#"You are a JSON news parser. Extract news items from the following JSON data and return them in the specified format.
+
+Base URL: {}
+
+JSON Data:
+{}
+
+Extract news items and return them in this exact JSON format:
+{{
+  "items": [
+    {{
+      "title": "News Title",
+      "url": "News URL",
+      "description": "News description",
+      "author": "Author name",
+      "timestamp": "2023-01-01T00:00:00Z"
+    }}
+  ]
+}}
+
+Only return the JSON response, no other text."#,
+            base_url, json_str
+        );
+
+        let response = match self.config.current_config.provider.as_str() {
+            "openai" | "deepseek" | "moonshot" | "qwen" | "baichuan" | "doubao" => {
+                self.call_openai_compatible(&prompt).await?
+            }
+            "anthropic" => {
+                self.call_anthropic(&prompt).await?
+            }
+            "zhipuai" => {
+                self.call_zhipuai(&prompt).await?
+            }
+            _ => return Err(anyhow!("Unsupported AI provider: {}", self.config.current_config.provider))
+        };
+
+        self.parse_ai_response(&response, base_url)
+    }
+
 //     fn build_prompt(&self, url: &str, html_content: &str, selector: Option<&str>) -> String {
 //         // 
 //         let truncated_html = if html_content.len() > 50000 {
@@ -977,7 +1137,7 @@ Return ONLY a JSON object in this exact format:
             root_container: Option<String>,
             item_list: Option<String>,
             item_node: String,
-            fields: std::collections::HashMap<String, TempField>,
+            fields: std::collections::HashMap<String, Option<TempField>>,
         }
 
         #[derive(Deserialize)]
@@ -997,7 +1157,16 @@ Return ONLY a JSON object in this exact format:
         // 4. Map to ExtractionRules field rules
         let mut field_rules = std::collections::HashMap::new();
 
-        for (field_name, field_data) in temp_data.selectors.fields {
+        for (field_name, field_data_opt) in temp_data.selectors.fields {
+            // Skip null fields
+            let field_data = match field_data_opt {
+                Some(data) => data,
+                None => {
+                    info!("Skipping field '{}' with null value", field_name);
+                    continue;
+                }
+            };
+            
             // Only create rule if both selector and attribute are present
             if let (Some(selector), Some(attribute)) = (field_data.selector, field_data.attribute) {
                 // Mark title and url as required

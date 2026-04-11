@@ -1,7 +1,7 @@
 use anyhow::{Result, anyhow};
 use reqwest::Client;
 use std::time::Duration;
-use tracing::{info, warn};
+use tracing::{info, warn, debug};
 use chrono::TimeZone;
 use scraper::{Html, Selector};
 use std::collections::HashMap;
@@ -21,26 +21,26 @@ impl WebScraper {
         }
     }
 
-    pub async fn fetch_html(&self, url: &str) -> Result<String> {
+    pub async fn fetch_html(&self, url: &str, use_headless: bool) -> Result<String> {
         info!("Fetching HTML from: {}", url);
 
-        // Try RSS feeds first
-        let rss_urls = [
-            format!("{}/rss", url),
-            format!("{}/rss.xml", url),
-            format!("{}/feed", url),
-            format!("{}/feed.xml", url),
-        ];
+        // Try RSS feeds first  咱不获取rss
+        // let rss_urls = [
+        //     format!("{}/rss", url),
+        //     format!("{}/rss.xml", url),
+        //     format!("{}/feed", url),
+        //     format!("{}/feed.xml", url),
+        // ];
 
-        for rss_url in &rss_urls {
-            if let Ok(content) = self.try_fetch_rss(rss_url).await {
-                info!("Found RSS feed at: {}", rss_url);
-                return Ok(content);
-            }
-        }
+        // for rss_url in &rss_urls {
+        //     if let Ok(content) = self.try_fetch_rss(rss_url).await {
+        //         info!("Found RSS feed at: {}", rss_url);
+        //         return Ok(content);
+        //     }
+        // }
 
         // Fall back to HTML
-        self.fetch_html_direct(url).await
+        self.fetch_html_direct(url, use_headless).await
     }
 
     async fn try_fetch_rss(&self, url: &str) -> Result<String> {
@@ -59,20 +59,72 @@ impl WebScraper {
         }
     }
 
-    pub async fn fetch_html_direct(&self, url: &str) -> Result<String> {
-        info!("Fetching HTML directly from: {}", url);
+    pub async fn fetch_html_direct(&self, url: &str, use_headless: bool) -> Result<String> {
+        if use_headless {
+            info!("Fetching HTML with headless browser: {}", url);
+            self.fetch_html_with_headless_browser(url).await
+        } else {
+            info!("Fetching HTML directly with HTTP: {}", url);
+            let response = self.client
+                .get(url)
+                .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8")
+                .header("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8")
+                .send()
+                .await
+                .map_err(|e| anyhow!("Failed to fetch HTML: {}", e))?;
 
-        let response = self.client
-            .get(url)
-            .send()
-            .await
-            .map_err(|e| anyhow!("Failed to fetch HTML: {}", e))?;
+            let content = response.text().await
+                .map_err(|e| anyhow!("Failed to read response text: {}", e))?;
 
-        let content = response.text().await
-            .map_err(|e| anyhow!("Failed to read response text: {}", e))?;
+            info!("Fetched HTML content, length: {}", content.len());
+            Ok(content)
+        }
+    }
 
-        info!("Fetched HTML content, length: {}", content.len());
-        Ok(content)
+    /// Fetch HTML with headless browser
+    async fn fetch_html_with_headless_browser(&self, url: &str) -> Result<String> {
+        use headless_chrome::{Browser, LaunchOptions};
+        use std::time::Duration;
+
+        info!("Launching headless browser...");
+
+        let browser = Browser::new(
+            LaunchOptions::default_builder()
+                .headless(true)
+                .build()
+                .map_err(|e| anyhow!("Failed to launch browser: {}", e))?
+        ).map_err(|e| anyhow!("Failed to create browser: {}", e))?;
+
+        let tab = browser.new_tab()
+            .map_err(|e| anyhow!("Failed to create tab: {}", e))?;
+
+        info!("Navigating to: {}", url);
+        tab.navigate_to(url)
+            .map_err(|e| anyhow!("Failed to navigate: {}", e))?;
+
+        // Wait for page to load and render
+        info!("Waiting for page to render (5 seconds)...");
+        std::thread::sleep(Duration::from_secs(5));
+
+        let html = tab.get_content()
+            .map_err(|e| anyhow!("Failed to get content: {}", e))?;
+
+        // Browser will be closed automatically when dropped
+        drop(browser);
+
+        info!("Fetched HTML using headless browser, length: {}", html.len());
+        
+        // Print preview for debugging
+        let preview: String = html.chars().take(500).collect();
+        info!("HTML preview (first 500 chars): {}", preview);
+        
+        let has_article = html.contains("<article") || html.contains("article");
+        let has_script = html.contains("<script");
+        let has_content = html.len() > 10000;
+        info!("HTML analysis - has_article: {}, has_script: {}, has_content: {}", 
+              has_article, has_script, has_content);
+        
+        Ok(html)
     }
 
     pub async fn parse_news_with_rules(

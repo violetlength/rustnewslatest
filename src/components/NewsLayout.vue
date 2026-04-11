@@ -92,7 +92,7 @@ const availableSources = computed<NewsSourceConfig[]>(() => {
     color: source.source_type === 'json' ? '#67c23a' : '#e6a23c'
   }))
   
-  return [...builtinSources, ...userSourcesConfig]
+  return [...userSourcesConfig, ...builtinSources]
 })
 
 const currentNewsSource = computed<NewsSource | undefined>(() => 

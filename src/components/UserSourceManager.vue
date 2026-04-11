@@ -215,7 +215,17 @@ const formRules: FormRules = {
   ],
   url: [
     { required: true, message: '请输入数据源URL', trigger: 'blur' },
-    { type: 'url', message: '请输入有效的URL', trigger: 'blur' }
+    { 
+      validator: (_rule, value, callback) => {
+        try {
+          new URL(value)
+          callback()
+        } catch {
+          callback(new Error('请输入有效的URL格式'))
+        }
+      }, 
+      trigger: 'blur' 
+    }
   ],
   selector: [
     { 

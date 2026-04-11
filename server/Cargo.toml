@@ -45,6 +45,7 @@ urlencoding = "2.1"
 toml = "0.8"
 futures = "0.3"
 url = "2.5"
+headless_chrome = "1.0"
 
 [target.'cfg(windows)'.build-dependencies]
 winres = "0.1"
