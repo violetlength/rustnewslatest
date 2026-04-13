@@ -1,0 +1,1043 @@
+﻿use super::ai_config::*;
+use super::types::*;
+use anyhow::{Result, anyhow};
+use reqwest::Client;
+use serde_json::json;
+use std::time::Duration;
+use tracing::{info, error, warn};
+use chrono::{DateTime, Utc, Local};
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+use std::sync::Arc;
+use tokio::sync::RwLock;
+use crate::types::{NewsItem, NewsSource, ParsingRules};
+
+// 瀛楃杈圭晫妫€鏌rait
+trait SafeStringSlice {
+    fn is_char_boundary(&self, index: usize) -> bool;
+}
+
+impl SafeStringSlice for str {
+    fn is_char_boundary(&self, index: usize) -> bool {
+        self.is_char_boundary(index)
+    }
+}
+
+pub struct AIClient {
+    client: Client,
+    config: AIConfig,
+}
+
+impl AIClient {
+    pub async fn new() -> Result<Self> {
+        let config = AIConfig::load().await?;
+        Ok(Self {
+            client: Client::new(),
+            config,
+        })
+    }
+
+    pub async fn parse_news_from_html(
+        &self,
+        url: &str,
+        html_content: &str,
+        selector: Option<&str>,
+    ) -> Result<Vec<NewsItem>> {
+        if !self.config.current_config.enabled {
+            return Err(anyhow!("AI parsing is not enabled"));
+        }
+
+        let prompt = self.build_prompt(url, html_content, selector);
+        
+        let response = match self.config.current_config.provider.as_str() {
+            "openai" | "deepseek" | "moonshot" | "qwen" | "baichuan" | "doubao" => {
+                self.call_openai_compatible(&prompt).await?
+            }
+            "anthropic" => {
+                self.call_anthropic(&prompt).await?
+            }
+            "zhipuai" => {
+                self.call_zhipuai(&prompt).await?
+            }
+            _ => return Err(anyhow!("Unsupported AI provider: {}", self.config.current_config.provider))
+        };
+
+        self.parse_ai_response(&response, url)
+    }
+
+//     fn build_prompt(&self, url: &str, html_content: &str, selector: Option<&str>) -> String {
+//         // 
+//         let truncated_html = if html_content.len() > 50000 {
+//             // 
+//             let safe_end = (50000 - 10).max(0); // 
+//             let mut end = safe_end;
+//             while end > 0 && !html_content.is_char_boundary(end) {
+//                 end -= 1;
+//             }
+//             format!("{}...", &html_content[..end])
+//         } else {
+//             html_content.to_string()
+//         };
+
+//         format!(
+//             r#"You are a web content parser. Extract news items from the following HTML content and return them in a specific JSON format.
+
+// URL: {}
+// Selector: {}
+
+// HTML Content:
+// {}
+
+// Please extract news items and return ONLY a JSON array with the following structure:
+// [
+//   {{
+//     "title": "News title",
+//     "url": "Full URL to the news article",
+//     "desc": "Brief description or summary",
+//     "timestamp": "ISO 8601 timestamp or date string",
+//     "author": "Author name if available",
+//     "cover": "Image URL if available",
+//     "hot": "Popularity score or views if available"
+//   }}
+// ]
+
+// Requirements:
+// 1. Extract up to 20 most recent news items
+// 2. Ensure all URLs are absolute (include full domain)
+// 3. Filter out navigation, menu, and non-news content
+// 4. If no selector is provided, use intelligent detection to find news patterns
+// 5. Return ONLY the JSON array, no additional text or explanation
+// 6. If no news items are found, return an empty array []"#,
+//             url,
+//             selector.unwrap_or("None (auto-detect)"),
+//             truncated_html
+//         )
+//     }
+
+    fn build_prompt(&self, url: &str, html_content: &str, selector: Option<&str>) -> String {
+        // 淇濇寔浣犵殑鎴柇閫昏緫锛岄槻姝?Token 婧㈠嚭
+        let truncated_html = if html_content.len() > 50000 {
+            let safe_end = (50000 - 10).max(0);
+            let mut end = safe_end;
+            while end > 0 && !html_content.is_char_boundary(end) {
+                end -= 1;
+            }
+            format!("{}...", &html_content[..end])
+        } else {
+            html_content.to_string()
+        };
+
+        // 鍔ㄦ€佹瀯寤烘寚浠わ細濡傛灉鐢ㄦ埛鎻愪緵浜嗛€夋嫨鍣紝鍒欏己鍒朵娇鐢紱鍚﹀垯璁?AI 鑷姩鎺㈡祴
+        let selector_instruction = match selector {
+            Some(sel) => format!("You MUST use the provided CSS selector '{}' to locate the items. Do not deviate.", sel),
+            None => "You must intelligently detect the repeating pattern (e.g., <li>, <article>, or <tr>) to locate news items.".to_string()
+        };
+
+        format!(
+            r#"You are an expert Data Extraction Engine. Your task is to parse the provided HTML and return a clean JSON dataset.
+
+    URL: {}
+    Instruction: {}
+
+    HTML Content:
+    {}
+
+    ### Extraction Rules
+    1.  **Pattern Matching**: Identify the repeating items based on the instruction.
+        -   **Handle Interleaved Rows**: If the data is in a table (like Hacker News) where the title is in one `<tr>` and details (score, comments) are in the *next* `<tr>`, you must combine them into a single object.
+    2.  **Field Extraction**: Extract **only** the fields that are actually present in the HTML.
+        -   **title**: The main headline text.
+        -   **url**: The link. **CRITICAL:** If the link is relative (starts with '/'), you must prepend the domain from the input URL (e.g., "https://news.dahe.cn").
+        -   **timestamp**: Look for dates (YYYY-MM-DD) or relative time (e.g., "2 hours ago").
+        -   **meta_info**: If there are scores, views, authors, or comments, extract them here. If none, leave empty.
+        -   **description**: A brief summary if available.
+    3.  **Data Cleaning**:
+        -   Remove extra whitespace and newlines.
+        -   Filter out navigation links, "Read More" buttons, and ads.
+    4.  **Output Limit**: Extract the top 15-20 items.
+
+    ### Output Format
+    Return **ONLY** a raw JSON array. Do not include markdown formatting (```json) or explanations.
+
+    Example Structure:
+    [
+    {{
+        "title": "Example News Title",
+        "url": "https://full-absolute-url.com/path",
+        "timestamp": "2026-04-10 10:00",
+        "meta_info": "100 points | by user123", 
+        "description": "Summary text..."
+    }}
+    ]
+
+    If no valid news items are found, return an empty array: []
+    "#,
+            url,
+            selector_instruction,
+            truncated_html
+        )
+    }
+
+    async fn call_openai_compatible(&self, prompt: &str) -> Result<String> {
+        let api_base = self.config.current_config.api_base
+            .clone()
+            .unwrap_or_else(|| "https://api.openai.com/v1".to_string());
+
+        let request = json!({
+            "model": self.config.current_config.model,
+            "messages": [
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            "temperature": 0.7,
+            "max_tokens": 4000
+        });
+
+        let response = self.client
+            .post(format!("{}/chat/completions", api_base))
+            .header("Authorization", format!("Bearer {}", self.config.current_config.api_key))
+            .header("Content-Type", "application/json")
+            .json(&request)
+            .timeout(Duration::from_secs(120))
+            .send()
+            .await
+            .map_err(|e| anyhow!("AI API request failed: {}", e))?;
+
+        let ai_response: AIResponse = response
+            .json()
+            .await
+            .map_err(|e| anyhow!("Failed to parse AI response: {}", e))?;
+
+        if let Some(choice) = ai_response.choices.first() {
+            Ok(choice.message.content.clone())
+        } else {
+            Err(anyhow!("No response from AI"))
+        }
+    }
+
+    async fn call_anthropic(&self, prompt: &str) -> Result<String> {
+        let request = json!({
+            "model": self.config.current_config.model,
+            "max_tokens": 4000,
+            "messages": [
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ]
+        });
+
+        let response = self.client
+            .post("https://api.anthropic.com/v1/messages")
+            .header("x-api-key", &self.config.current_config.api_key)
+            .header("Content-Type", "application/json")
+            .header("anthropic-version", "2023-06-01")
+            .json(&request)
+            .timeout(Duration::from_secs(120))
+            .send()
+            .await
+            .map_err(|e| anyhow!("Anthropic API request failed: {}", e))?;
+
+        let ai_response: serde_json::Value = response
+            .json()
+            .await
+            .map_err(|e| anyhow!("Failed to parse Anthropic response: {}", e))?;
+
+        if let Some(content) = ai_response["content"][0]["text"].as_str() {
+            Ok(content.to_string())
+        } else {
+            Err(anyhow!("No response from Anthropic"))
+        }
+    }
+
+    async fn call_zhipuai(&self, prompt: &str) -> Result<String> {
+        let api_base = self.config.current_config.api_base
+            .as_ref()
+            .map(|s| s.as_str())
+            .unwrap_or("https://open.bigmodel.cn/api/paas/v4");
+
+        let request = json!({
+            "model": self.config.current_config.model,
+            "messages": [
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            "temperature": 0.7,
+            "max_tokens": 4000
+        });
+
+        let response = self.client
+            .post(format!("{}/chat/completions", api_base))
+            .header("Authorization", format!("Bearer {}", self.config.current_config.api_key))
+            .header("Content-Type", "application/json")
+            .json(&request)
+            .timeout(Duration::from_secs(120))
+            .send()
+            .await
+            .map_err(|e| anyhow!("ZhipuAI API request failed: {}", e))?;
+
+        let ai_response: AIResponse = response
+            .json()
+            .await
+            .map_err(|e| anyhow!("Failed to parse ZhipuAI response: {}", e))?;
+
+        if let Some(choice) = ai_response.choices.first() {
+            Ok(choice.message.content.clone())
+        } else {
+            Err(anyhow!("No response from ZhipuAI"))
+        }
+    }
+
+    // fn parse_ai_response(&self, response: &str, base_url: &str) -> Result<Vec<NewsItem>> {
+    //     let json_str = response.trim();
+        
+    //     // Remove markdown code blocks if present
+    //     let json_str = json_str
+    //         .strip_prefix("```json")
+    //         .unwrap_or(json_str)
+    //         .strip_suffix("```")
+    //         .unwrap_or(json_str)
+    //         .trim();
+
+    //     info!("AI raw response: {}", json_str);
+
+    //     let items: Vec<ParsedNewsItem> = serde_json::from_str(json_str)
+    //         .map_err(|e| anyhow!("Failed to parse AI JSON response: {}", e))?;
+
+    //     info!("AI parsed {} items", items.len());
+
+    //     let mut news_items = Vec::new();
+    //     for item in items.into_iter() {
+    //         let absolute_url = if item.url.starts_with("http") {
+    //             item.url.clone()
+    //         } else {
+    //             match url::Url::parse(base_url) {
+    //                 Ok(base) => {
+    //                     match base.join(&item.url) {
+    //                         Ok(joined) => joined.to_string(),
+    //                         Err(_) => base_url.to_string(),
+    //                     }
+    //                 }
+    //                 Err(_) => base_url.to_string(),
+    //             }
+    //         };
+
+    //         news_items.push(NewsItem {
+    //             id: uuid::Uuid::new_v4().to_string(),
+    //             title: item.title,
+    //             url: absolute_url,
+    //             desc: item.desc,
+    //             cover: item.cover,
+    //             author: item.author,
+    //             timestamp: Some(item.timestamp
+    //                 .as_ref()
+    //                 .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())
+    //                 .map(|dt| dt.with_timezone(&chrono::Utc))
+    //                 .unwrap_or_else(|| chrono::Utc::now())
+    //                 .with_timezone(&chrono::Local)
+    //                 .format("%Y-%m-%d %H:%M:%S")
+    //                 .to_string()),
+    //             hot: item.hot.and_then(|s| s.parse().ok()),
+    //             mobile_url: None,
+    //         });
+    //     }
+
+    //     Ok(news_items)
+    // }
+
+    // 鍦?use super.txt 涓壘鍒?fn parse_ai_response锛屾浛鎹负浠ヤ笅浠ｇ爜锛?
+    fn parse_ai_response(&self, response: &str, base_url: &str) -> Result<Vec<NewsItem>> {
+        // 杩欓噷鍋囪 response 鏄?AI 鐩存帴杩斿洖鐨?JSON 鏁版嵁鍒楄〃锛堝閿欓€昏緫锛?        // 浣嗗湪浣犵殑鏋舵瀯涓紝绗簩姝ラ€氬父鏄?"浣跨敤瑙勫垯瑙ｆ瀽"锛屾墍浠ヨ繖涓嚱鏁板彲鑳藉彧鍦ㄧ涓€姝ュけ璐ユ椂浣跨敤
+        // 涓轰簡淇濋櫓锛屾垜浠繚鎸佸畠鑳借В鏋愭爣鍑嗙殑 NewsItem 鍒楄〃
+
+        let json_str = response.trim()
+            .strip_prefix("```json")
+            .unwrap_or(response)
+            .strip_suffix("```")
+            .unwrap_or(response)
+            .trim();
+
+        // 鍋囪 AI 鐩存帴杩斿洖鐨勬槸 NewsItem 鐨勬暟缁?        let raw_items: Vec<serde_json::Value> = serde_json::from_str(json_str)
+            .map_err(|e| anyhow!("Parse Error: {}", e))?;
+
+        let mut news_items = Vec::new();
+        for item in raw_items {
+            // 鐩存帴搴忓垪鍖栨垚 NewsItem锛屽埄鐢?serde 鐨勭壒鎬?            if let Ok(news_item) = serde_json::from_value::<NewsItem>(item.clone()) {
+                // 濡傛灉 ID 涓虹┖锛岀敓鎴愪竴涓?                let mut final_item = news_item;
+                if final_item.id.is_empty() {
+                    final_item.id = uuid::Uuid::new_v4().to_string();
+                }
+                news_items.push(final_item);
+            } else {
+                // 瀹归敊锛氬鏋滆В鏋愬け璐ワ紝鏋勫缓涓€涓渶绠€ Item
+                news_items.push(NewsItem {
+                    id: uuid::Uuid::new_v4().to_string(),
+                    title: item.get("title").and_then(|v| v.as_str()).unwrap_or("No Title").to_string(),
+                    url: item.get("url").and_then(|v| v.as_str()).unwrap_or(base_url).to_string(),
+                    // 鍏朵粬瀛楁榛樿
+                    ..Default::default()
+                });
+            }
+        }
+
+        Ok(news_items)
+    }
+
+    pub async fn generate_parsing_rules(
+        &self,
+        url: &str,
+        html_content: &str,
+    ) -> Result<ParsingRules, anyhow::Error> {
+        if !self.config.current_config.enabled {
+            return Err(anyhow!("AI parsing is not enabled"));
+        }
+
+        let prompt = self.build_rules_prompt(url, html_content);
+        
+        let response = match self.config.current_config.provider.as_str() {
+            "openai" | "deepseek" | "moonshot" | "qwen" | "baichuan" | "doubao" => {
+                self.call_openai_compatible(&prompt).await?
+            }
+            "anthropic" => {
+                self.call_anthropic(&prompt).await?
+            }
+            "zhipuai" => {
+                self.call_zhipuai(&prompt).await?
+            }
+            _ => return Err(anyhow!("Unsupported AI provider: {}", self.config.current_config.provider))
+        };
+
+        self.parse_rules_response(&response, url)
+    }
+
+    pub async fn generate_structured_extraction_rules(
+        &self,
+        url: &str,
+        html_content: &str,
+    ) -> Result<crate::types::ExtractionRules, anyhow::Error> {
+        if !self.config.current_config.enabled {
+            return Err(anyhow!("AI parsing is not enabled"));
+        }
+
+        let prompt = self.build_structured_rules_prompt(url, html_content);
+        
+        let response = match self.config.current_config.provider.as_str() {
+            "openai" | "deepseek" | "moonshot" | "qwen" | "baichuan" | "doubao" => {
+                self.call_openai_compatible(&prompt).await?
+            }
+            "anthropic" => {
+                self.call_anthropic(&prompt).await?
+            }
+            "zhipuai" => {
+                self.call_zhipuai(&prompt).await?
+            }
+            _ => return Err(anyhow!("Unsupported AI provider: {}", self.config.current_config.provider))
+        };
+
+        self.parse_structured_rules_response(&response, url)
+    }
+
+//     fn build_rules_prompt(&self, url: &str, html_content: &str) -> String {
+//         let truncated_html = if html_content.len() > 50000 {
+//             let safe_end = (50000 - 10).max(0);
+//             let mut end = safe_end;
+//             while end > 0 && !html_content.is_char_boundary(end) {
+//                 end -= 1;
+//             }
+//             format!("{}...", &html_content[..end])
+//         } else {
+//             html_content.to_string()
+//         };
+
+//         let json_example = format!(r#"{{
+//     "container_selector": "{}",
+//     "title_in_container": "a",
+//     "link_in_container": "a", 
+//     "desc_in_container": null,
+//     "time_in_container": "span"
+// }}"#, "#content li");
+
+//         format!(
+//             r#"You are a web scraping expert. Analyze the following HTML content and generate CSS selectors for extracting news items using a container-based approach.
+
+// URL: {}
+// HTML Content:
+// {}
+
+// Please analyze the structure and return a JSON object with the following fields:
+// {{
+//     "container_selector": "CSS selector for news item containers (e.g., '#content li', 'article', '.news-item')",
+//     "title_in_container": "CSS selector for title within each container (e.g., 'a', 'h2', '.title')",
+//     "link_in_container": "CSS selector for link within each container (e.g., 'a', 'h2 a', '.link')",
+//     "desc_in_container": "CSS selector for description within each container (optional, e.g., 'p', '.desc', '.summary')",
+//     "time_in_container": "CSS selector for time within each container (optional, e.g., 'span', '.time', 'time')"
+// }}
+
+// Guidelines:
+// 1. Find the main container selector that identifies all news items
+// 2. Within each container, use simple selectors for title, link, description, time
+// 3. Use common patterns like 'a' for title/link, 'span' for time, 'p' for description
+// 4. If a selector is not available, set it to null
+// 5. Return ONLY the JSON object, no additional text
+
+// Example response:
+// {}
+// "#,
+//             url, truncated_html, json_example
+//         )
+//     }
+
+    fn build_rules_prompt(&self, url: &str, html_content: &str) -> String {
+        // 淇濇寔浣犵殑 Truncate 閫昏緫
+        let truncated_html = if html_content.len() > 50000 {
+            let safe_end = (50000 - 10).max(0);
+            let mut end = safe_end;
+            while end > 0 && !html_content.is_char_boundary(end) {
+                end -= 1;
+            }
+            format!("{}...", &html_content[..end])
+        } else {
+            html_content.to_string()
+        };
+
+        // 浼樺寲鍚庣殑 Prompt
+        format!(
+            r#"You are a Web Scraping Architect. Analyze the provided HTML and generate a universal extraction schema.
+
+    URL: {}
+    HTML Content:
+    {}
+
+    **Step 1: Structural Diagnosis**
+    Analyze the DOM tree to determine the layout pattern:
+    1. **Table/Interleaved Layout**: (Like Hacker News) Data is split across adjacent elements. *Strategy:* Use sibling selectors.
+    2. **List/Grid Layout**: (Like News Sites) Self-contained items (e.g., <li> or <div class="card">). *Strategy:* Find the repeating container.
+    3. **Shadow/Dynamic Layout**: (Like Modern JS Apps) Data might be obfuscated.
+
+    **Step 2: Rule Generation**
+    Generate a JSON object based on your diagnosis. Infer field names from the content (e.g., "views", "score", "author").
+
+    **Output JSON Schema:**
+    {{
+    "meta": {{
+        "detected_pattern": "List" | "Table_Interleaved" | "Card_Grid",
+        "confidence": "high" | "medium"
+    }},
+    "selectors": {{
+        "root_container": "The outermost wrapper of the list (e.g., div#news, main)",
+        "item_list": "The direct parent of repeating items (e.g., ul, ol, tbody)",
+        "item_node": "The selector for one repeating item unit (e.g., li, .card, tr.athing)",
+        "fields": {{
+        "inferred_field_name_1": {{
+            "selector": "CSS_SELECTOR_RELATIVE_TO_ITEM",
+            "attribute": "text" | "href" | "src" | "datetime",
+            "description": "What this field represents (e.g., Title, Publish Date)"
+        }},
+        "inferred_field_name_2": {{
+            "selector": "CSS_SELECTOR_RELATIVE_TO_ITEM",
+            "attribute": "text",
+            "description": "Another field found in the HTML"
+        }}
+        // Add more fields as inferred from the HTML content
+        }}
+    }},
+    "notes": "Any special instructions (e.g., 'Data is split into two rows')"
+    }}
+
+    **Constraints:**
+    - **Field Inference**: Do not limit yourself to 'title' and 'time'. Look at the HTML content. If you see numbers like '100 points', create a field like 'score'.
+    - **Robustness**: Avoid generic tags without classes unless necessary.
+    - **Output Format**: Return **ONLY** the raw JSON string. No markdown code blocks (```json), no explanations.
+    "#,
+            url, truncated_html
+        )
+    }
+
+    fn parse_rules_response(&self, response: &str, _url: &str) -> Result<ParsingRules, anyhow::Error> {
+        let cleaned_response = response.trim().trim_start_matches("```json").trim_end_matches("```");
+        
+        let rules_data: serde_json::Value = serde_json::from_str(cleaned_response)
+            .map_err(|e| anyhow!("Failed to parse AI response as JSON: {}", e))?;
+
+        let container_selector = rules_data.get("container_selector")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| anyhow!("Missing container_selector in AI response"))?
+            .to_string();
+
+        let title_in_container = rules_data.get("title_in_container")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| anyhow!("Missing title_in_container in AI response"))?
+            .to_string();
+
+        let link_in_container = rules_data.get("link_in_container")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| anyhow!("Missing link_in_container in AI response"))?
+            .to_string();
+
+        let desc_in_container = rules_data.get("desc_in_container")
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string());
+
+        let time_in_container = rules_data.get("time_in_container")
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string());
+
+        Ok(ParsingRules {
+            container_selector,
+            title_in_container,
+            link_in_container,
+            desc_in_container,
+            time_in_container,
+            created_at: chrono::Utc::now(),
+            success_rate: 1.0, // Start with 100% success rate
+            total_attempts: 0,
+        })
+    }
+
+
+    // fn build_structured_rules_prompt(&self, url: &str, html_content: &str) -> String {
+    //     // 1. Detect content type first
+    //     let content_type = self.detect_content_type_for_prompt(html_content);
+    //     let content_guidance = self.get_content_specific_guidance(&content_type);
+        
+    //     // 2. Truncate logic remains same to avoid token overflow
+    //     let truncated_html = if html_content.len() > 50000 {
+    //         let safe_end = (50000 - 10).max(0);
+    //         let mut end = safe_end;
+    //         while end > 0 && !html_content.is_char_boundary(end) {
+    //             end -= 1;
+    //         }
+    //         format!("{}...", &html_content[..end])
+    //     } else {
+    //         html_content.to_string()
+    //     };
+
+    //     // 3. We keep JSON example, but make it slightly more robust
+    //     // Note: In real "Meta-Prompt" system, this would be dynamic.
+    //     // For now, we keep it as a fallback format.
+    //     let json_example = r#"{
+    // "selectors": {
+    //     "root_container": "div.list-container",
+    //     "item_list": "ul", 
+    //     "item_node": "li.news-item",
+    //     "fields": {
+    //     "title": {
+    //         "selector": "a",
+    //         "attribute": "text",
+    //         "required": true,
+    //         "clean": true
+    //     },
+    //     "url": {
+    //         "selector": "a", 
+    //         "attribute": "href",
+    //         "required": true,
+    //         "format": "url"
+    //     },
+    //     "publish_time": {
+    //         "selector": ".time",
+    //         "attribute": "text",
+    //         "required": false,
+    //         "format": "datetime:YYYY-MM-DD HH:mm",
+    //         "clean": true
+    //     }
+    //     }
+    // }
+    // }"#;
+
+    //     // 4. The Optimized Prompt (Meta-Prompt)
+    //     // This is core improvement. It guides the AI to think like an architect.
+    //     format!(
+    //             r#"You are an expert Web Scraping Architect. Your task is to generate precise CSS selectors for the provided HTML.
+
+    //         URL: {}
+    //         Content Type: {}
+    //         HTML Content Preview:
+    //         {}
+
+    //         ### Content-Specific Guidance
+    //         {}
+
+    //         ### Critical Analysis Instructions
+    //         Before generating JSON, please analyze the HTML structure carefully:
+
+    //         1. **Identify the "Noise"**: Do not select navigation menus, footer links, or "Previous/Next" page buttons. Focus only on the repeating list items.
+    //         2. **Data Granularity**: Look for timestamps near the title. If the timestamp is in a separate element (e.g., a sibling span), include it.
+    //         3. **Relative vs Absolute**: If URLs are relative (start with /), the "base_url" should be derived from the input URL.
+
+    //         ### Output Specification
+    //         Generate a JSON object strictly in this format. Do not add any text outside the JSON.
+    //         {json_example}
+
+    //         ### Rules for Generation
+    //         - **root_container**: The outermost wrapper that contains the entire list section.
+    //         - **item_list**: The direct parent of the repeating items (often a <ul> or a <div> with a specific class).
+    //         - **item_node**: The selector that matches EACH individual news item (e.g., each <li> or each .card).
+    //         - **Field Selection**:
+    //             - **title**: Must be a link (<a>) or a heading tag. Use 'text' attribute.
+    //             - **url**: Must be an 'href' attribute. If the URL is relative, set "base_url" to the domain of the input URL.
+    //             - **publish_time**: Look for patterns like "2026-04-09 08:21". Use the format "datetime:YYYY-MM-DD HH:mm".
+    //             - **description**: Only include if there is a distinct summary text below the title.
+
+    //         ### Important Constraints
+    //         1. **Accuracy over Completeness**: If a field (like image or description) is not consistently present, do not include it in the JSON.
+    //         2. **Robust Selectors**: Avoid overly generic tags like `div:nth-child(2)`. Use classes or IDs that are semantically related to news (e.g., 'title', 'date', 'news').
+    //         3. **Output Only**: Return ONLY the raw JSON object. No markdown code blocks (```json), no explanations.
+
+    //         Let's begin. Analyze the HTML above and return the JSON configuration.
+    //         "#,
+    //             url, content_type, truncated_html, content_guidance, json_example = json_example
+    //     )
+    // }
+
+    // 鍦?use super.txt 涓壘鍒?fn build_structured_rules_prompt锛屾浛鎹负浠ヤ笅浠ｇ爜锛?
+    fn build_structured_rules_prompt(&self, url: &str, html_content: &str) -> String {
+        let truncated_html = if html_content.len() > 50000 {
+            let safe_end = (50000 - 10).max(0);
+            let mut end = safe_end;
+            while end > 0 && !html_content.is_char_boundary(end) {
+                end -= 1;
+            }
+            format!("{}...", &html_content[..end])
+        } else {
+            html_content.to_string()
+        };
+
+        // Detect content type for better rule generation
+        let content_type = self.detect_content_type_for_prompt(&truncated_html);
+
+        // Define complete target schema with all required fields
+        let target_schema_example = r#"{
+    "selectors": {
+        "root_container": "div#main",
+        "item_list": "ul.news-list",
+        "item_node": "li.news-item",
+        "fields": {
+            "title": { "selector": "a", "attribute": "text" },
+            "url": { "selector": "a", "attribute": "href" },
+            "desc": { "selector": "p.summary", "attribute": "text" },
+            "cover": { "selector": "img", "attribute": "src" },
+            "author": { "selector": ".author", "attribute": "text" },
+            "timestamp": { "selector": ".time", "attribute": "text" },
+            "hot": { "selector": ".score", "attribute": "text" },
+            "mobile_url": { "selector": "a", "attribute": "data-mobile" }
+        }
+    }
+}"#;
+
+        format!(
+            r#"You are a Web Scraping Rule Generator. Your task is to generate precise CSS selectors for the provided HTML.
+
+### TARGET DATA STRUCTURE
+Your generated rules MUST map to these exact fields (to fit the Rust struct):
+- title: (String, REQUIRED) The news headline.
+- url: (String, REQUIRED) The absolute link to the article.
+- desc: (Option<String>) A short summary or description.
+- cover: (Option<String>) Image URL.
+- author: (Option<String>) The writer or source name.
+- timestamp: (Option<String>) Publish time.
+- hot: (Option<String>) Popularity score (e.g., "100 points", "10k views").
+- mobile_url: (Option<String>) Mobile redirect link.
+
+### INPUT
+URL: {url}
+Content Type: {content_type}
+HTML: {truncated_html}
+
+### INSTRUCTIONS
+1. Analyze the HTML structure carefully.
+2. Identify the hierarchical structure:
+   - root_container: The outermost wrapper that contains the entire list section (e.g., div#main, table#hnmain)
+   - item_list: The direct parent of the repeating items (e.g., ul.news-list, tbody)
+   - item_node: The selector that matches EACH individual news item (e.g., li.news-item, tr.athing)
+3. For each field in the TARGET DATA STRUCTURE above:
+   - If the data exists in the HTML, provide a selector and attribute.
+   - If the data does NOT exist, set that field to null.
+4. Do NOT invent new field names. Only use the 8 fields listed above.
+
+### OUTPUT FORMAT
+Return ONLY a JSON object in this exact format:
+{target_schema_example}
+
+### WARNINGS
+- Do not include the raw HTML code inside the JSON values.
+- Do not wrap the JSON in ```json code blocks.
+- Do not add any text before or after the JSON.
+- All selectors must be valid CSS selectors.
+- For relative URLs, do NOT include base_url field (it will be handled automatically).
+"#,
+            url = url,
+            content_type = content_type,
+            truncated_html = truncated_html,
+            target_schema_example = target_schema_example
+        )
+    }
+    fn detect_content_type_for_prompt(&self, html_content: &str) -> String {
+        let content_lower = html_content.to_lowercase();
+        
+        if content_lower.contains("<rss") || content_lower.contains("<feed") || content_lower.contains("<channel>") {
+            "RSS/Atom Feed".to_string()
+        } else if content_lower.contains("<article") || content_lower.contains("class=\"article") || content_lower.contains("class=\"post\"") {
+            "Article/Blog".to_string()
+        } else if content_lower.contains("<ul") && content_lower.contains("<li>") && (content_lower.contains("href") || content_lower.contains("news")) {
+            "List/News".to_string()
+        } else if content_lower.contains("github.com") || content_lower.contains("repository") {
+            "GitHub".to_string()
+        } else if content_lower.contains("class=\"card\"") || content_lower.contains("class=\"item\"") {
+            "Card-based Layout".to_string()
+        } else {
+            "General Web".to_string()
+        }
+    }
+
+    fn get_content_specific_guidance(&self, content_type: &str) -> String {
+        match content_type {
+            "RSS/Atom Feed" => {
+                "For RSS feeds: Use 'channel' as item_list, 'item' as item_node. Fields: title (title), url (link), timestamp (pubDate), description (description).".to_string()
+            }
+            "Article/Blog" => {
+                "For blogs: Look for article elements or post containers. Fields: title (h1-h3), url (a[href]), timestamp (time, date, .date), author (.author, .byline), description (.summary, p).".to_string()
+            }
+            "List/News" => {
+                "For news lists: Find ul/li structures with repeated patterns. Fields: title (a, h2-h4), url (a[href]), timestamp (span.time, .date), description (.desc, p).".to_string()
+            }
+            "GitHub" => {
+                "For GitHub: Look for repository cards or list items. Fields: title (.repo-name, a), url (a[href]), description (p, .description), language (.language), stars (.stars).".to_string()
+            }
+            "Card-based Layout" => {
+                "For card layouts: Identify card containers with consistent structure. Fields: title (.title, h2-h4), url (a[href]), description (.desc, .summary), timestamp (.time, .date).".to_string()
+            }
+            _ => {
+                "For general web: Look for repeated patterns and containers. Focus on semantic HTML and common class names. Fields: title (h1-h4, a), url (a[href]), description (.desc, p), timestamp (.time, .date).".to_string()
+            }
+        }
+    }
+
+    
+    pub async fn test_connection(&self, test_prompt: &str) -> Result<String, anyhow::Error> {
+        if !self.config.current_config.enabled {
+            return Err(anyhow!("AI parsing is not enabled"));
+        }
+
+        let response = match self.config.current_config.provider.as_str() {
+            "openai" | "deepseek" | "moonshot" | "qwen" | "baichuan" | "doubao" => {
+                self.call_openai_compatible(test_prompt).await?
+            }
+            "anthropic" => {
+                self.call_anthropic(test_prompt).await?
+            }
+            "zhipuai" => {
+                self.call_zhipuai(test_prompt).await?
+            }
+            _ => return Err(anyhow!("Unsupported AI provider: {}", self.config.current_config.provider))
+        };
+        
+        Ok(response)
+    }
+
+    pub fn get_provider_name(&self) -> String {
+        self.config.current_config.provider.clone()
+    }
+
+    pub fn get_model_name(&self) -> String {
+        self.config.current_config.model.clone()
+    }
+
+    // fn parse_structured_rules_response(&self, response: &str, url: &str) -> Result<crate::types::ExtractionRules, anyhow::Error> {
+    //     let cleaned_response = response.trim().trim_start_matches("```json").trim_end_matches("```");
+        
+    //     let rules_data: serde_json::Value = serde_json::from_str(cleaned_response)
+    //         .map_err(|e| anyhow!("Failed to parse AI response as JSON: {}", e))?;
+
+    //     let task = rules_data.get("task")
+    //         .and_then(|v| v.as_str())
+    //         .unwrap_or("extract_news_list")
+    //         .to_string();
+
+    //     let source_url = rules_data.get("source_url")
+    //         .and_then(|v| v.as_str())
+    //         .unwrap_or(url)
+    //         .to_string();
+
+    //     let rules_version = rules_data.get("rules_version")
+    //         .and_then(|v| v.as_str())
+    //         .unwrap_or("1.0")
+    //         .to_string();
+
+    //     let selectors_data = rules_data.get("selectors")
+    //         .ok_or_else(|| anyhow!("Missing selectors in AI response"))?;
+
+    //     let root_container = selectors_data.get("root_container")
+    //         .and_then(|v| v.as_str())
+    //         .ok_or_else(|| anyhow!("Missing root_container in AI response"))?
+    //         .to_string();
+
+    //     let item_list = selectors_data.get("item_list")
+    //         .and_then(|v| v.as_str())
+    //         .ok_or_else(|| anyhow!("Missing item_list in AI response"))?
+    //         .to_string();
+
+    //     let item_node = selectors_data.get("item_node")
+    //         .and_then(|v| v.as_str())
+    //         .ok_or_else(|| anyhow!("Missing item_node in AI response"))?
+    //         .to_string();
+
+    //     let fields_data = selectors_data.get("fields")
+    //         .and_then(|v| v.as_object())
+    //         .ok_or_else(|| anyhow!("Missing or invalid fields in AI response"))?;
+
+    //     let mut fields = std::collections::HashMap::new();
+
+    //     for (field_name, field_data) in fields_data {
+    //         let selector = field_data.get("selector")
+    //             .and_then(|v| v.as_str())
+    //             .ok_or_else(|| anyhow!("Missing selector for field '{}'", field_name))?
+    //             .to_string();
+
+    //         let attribute = field_data.get("attribute")
+    //             .and_then(|v| v.as_str())
+    //             .unwrap_or("text")
+    //             .to_string();
+
+    //         let required = field_data.get("required")
+    //             .and_then(|v| v.as_bool())
+    //             .unwrap_or(false);
+
+    //         let base_url = field_data.get("base_url")
+    //             .and_then(|v| v.as_str())
+    //             .map(|s| s.to_string());
+
+    //         let format_type = field_data.get("format")
+    //             .and_then(|v| v.as_str())
+    //             .map(|s| s.to_string());
+
+    //         let clean = field_data.get("clean")
+    //             .and_then(|v| v.as_bool())
+    //             .unwrap_or(true);
+
+    //         let field_rule = crate::types::FieldRule {
+    //             selector,
+    //             attribute,
+    //             required,
+    //             base_url,
+    //             format: format_type,
+    //             clean,
+    //         };
+
+    //         fields.insert(field_name.clone(), field_rule);
+    //     }
+
+    //     let notes = rules_data.get("notes")
+    //         .and_then(|v| v.as_str())
+    //         .map(|s| s.to_string());
+
+    //     Ok(crate::types::ExtractionRules {
+    //         task,
+    //         source_url,
+    //         rules_version,
+    //         selectors: crate::types::ExtractionSelectors {
+    //             root_container,
+    //             item_list,
+    //             item_node,
+    //             fields,
+    //         },
+    //         notes,
+    //         created_at: chrono::Utc::now(),
+    //         success_rate: 1.0,
+    //         total_attempts: 0,
+    fn parse_structured_rules_response(&self, response: &str, url: &str) -> Result<crate::types::ExtractionRules, anyhow::Error> {
+        // 1. Clean response - remove markdown code blocks if present
+        let cleaned_response = response
+            .trim()
+            .trim_start_matches("```json")
+            .trim_start_matches("```")
+            .trim_end_matches("```")
+            .trim();
+
+        info!("Parsing AI rules response for URL: {}", url);
+
+        // 2. Define intermediate structure matching AI output format
+        #[derive(Deserialize)]
+        struct TempField {
+            selector: Option<String>,
+            attribute: Option<String>,
+        }
+
+        #[derive(Deserialize)]
+        struct TempSelectors {
+            root_container: Option<String>,
+            item_list: Option<String>,
+            item_node: String,
+            fields: std::collections::HashMap<String, TempField>,
+        }
+
+        #[derive(Deserialize)]
+        struct TempResponse {
+            selectors: TempSelectors,
+        }
+
+        // 3. Parse JSON
+        let temp_data: TempResponse = serde_json::from_str(cleaned_response)
+            .map_err(|e| {
+                error!("Failed to parse AI JSON: {}. Raw response: {}", e, cleaned_response);
+                anyhow!("Failed to parse AI JSON: {}. Raw: {}", e, cleaned_response)
+            })?;
+
+        info!("Successfully parsed AI response with item_node: {}", temp_data.selectors.item_node);
+
+        // 4. Map to ExtractionRules field rules
+        let mut field_rules = std::collections::HashMap::new();
+
+        for (field_name, field_data) in temp_data.selectors.fields {
+            // Only create rule if both selector and attribute are present
+            if let (Some(selector), Some(attribute)) = (field_data.selector, field_data.attribute) {
+                // Mark title and url as required
+                let is_required = field_name == "title" || field_name == "url";
+                
+                let rule = crate::types::FieldRule {
+                    selector,
+                    attribute,
+                    required: is_required,
+                    base_url: Some(url.to_string()), // Auto-fill base_url for relative URLs
+                    format: None,
+                    clean: true,
+                };
+                field_rules.insert(field_name, rule);
+            } else {
+                info!("Skipping field '{}' with null selector or attribute", field_name);
+            }
+        }
+
+        // 5. Build final ExtractionRules with all selector levels
+        let root_container = temp_data.selectors.root_container.unwrap_or_else(|| "body".to_string());
+        let item_list = temp_data.selectors.item_list.unwrap_or_else(|| {
+            // If item_list not provided, use parent of item_node
+            let parts: Vec<&str> = temp_data.selectors.item_node.split(' ').collect();
+            if parts.len() > 1 {
+                parts[..parts.len()-1].join(" ")
+            } else {
+                "body".to_string()
+            }
+        });
+
+        Ok(crate::types::ExtractionRules {
+            task: "extract_news_list".to_string(),
+            source_url: url.to_string(),
+            rules_version: "1.0".to_string(),
+            selectors: crate::types::ExtractionSelectors {
+                root_container,
+                item_list,
+                item_node: temp_data.selectors.item_node,
+                fields: field_rules,
+            },
+            notes: Some(format!("Auto-generated rules for {} on {}", url, chrono::Utc::now().format("%Y-%m-%d"))),
+            created_at: chrono::Utc::now(),
+            success_rate: 1.0,
+            total_attempts: 0,
+        })
+    }
+
+}

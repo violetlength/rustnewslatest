@@ -64,19 +64,27 @@ impl WebScraper {
             info!("Fetching HTML with headless browser: {}", url);
             self.fetch_html_with_headless_browser(url).await
         } else {
-            info!("Fetching HTML directly with HTTP: {}", url);
+            // Check if this is a JSON API
+            let accept_header = if url.contains("/api/") || url.contains("?") {
+                info!("Fetching JSON API directly with HTTP: {}", url);
+                "application/json, text/plain, */*"
+            } else {
+                info!("Fetching HTML directly with HTTP: {}", url);
+                "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
+            };
+            
             let response = self.client
                 .get(url)
-                .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8")
+                .header("Accept", accept_header)
                 .header("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8")
                 .send()
                 .await
-                .map_err(|e| anyhow!("Failed to fetch HTML: {}", e))?;
+                .map_err(|e| anyhow!("Failed to fetch content: {}", e))?;
 
             let content = response.text().await
                 .map_err(|e| anyhow!("Failed to read response text: {}", e))?;
 
-            info!("Fetched HTML content, length: {}", content.len());
+            info!("Fetched content, length: {}", content.len());
             Ok(content)
         }
     }

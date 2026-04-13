@@ -27,9 +27,9 @@ class UserSourceService {
   // 获取用户数据源列表
   async getUserSources(): Promise<UserNewsSource[]> {
     try {
-      const response = await ApiService.get('/api/user-sources') as ApiResponse<{user_sources: UserNewsSource[]}>
+      const response = await ApiService.get('/api/user-sources') as ApiResponse<UserNewsSource[]>
       if (response.success && response.data) {
-        return response.data.user_sources
+        return response.data
       }
       throw new Error(response.error || '获取用户数据源失败')
     } catch (error) {

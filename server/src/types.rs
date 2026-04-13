@@ -80,6 +80,15 @@ pub enum UserSourceType {
     Web,
 }
 
+impl std::fmt::Display for UserSourceType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            UserSourceType::Json => write!(f, "json"),
+            UserSourceType::Web => write!(f, "web"),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ParsingRules {
     pub container_selector: String,    // Container selector for news items (e.g., "#content li", "article")
@@ -143,6 +152,7 @@ pub struct UserNewsSource {
     pub url: String,
     pub selector: Option<String>, // CSS selector for web sources (backward compatibility)
     pub parsing_rules: Option<ParsingRulesVariant>, // AI-generated parsing rules (legacy or structured)
+    pub field_mapping_rules: Option<serde_json::Value>, // Field mapping rules for JSON APIs
     pub created_at: DateTime<Utc>,
     pub user_id: Option<String>,
     pub is_active: bool,
@@ -166,6 +176,7 @@ impl UserNewsSource {
             url,
             selector,
             parsing_rules: None, // Will be generated later
+            field_mapping_rules: None, // Will be generated later for JSON APIs
             created_at: Utc::now(),
             user_id: None,
             is_active: true,

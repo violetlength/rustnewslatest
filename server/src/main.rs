@@ -201,11 +201,10 @@ async fn test_ai_connection() -> Json<ApiResponse<serde_json::Value>> {
 }
 
 // User Sources
-async fn get_user_sources() -> Json<ApiResponse<serde_json::Value>> {
-    match types::UserSourcesConfig::load().await {
-        Ok(config) => Json(ApiResponse::success(serde_json::to_value(config).unwrap())),
-        Err(e) => Json(ApiResponse::<serde_json::Value>::error(format!("Failed to load user sources: {}", e))),
-    }
+async fn get_user_sources(State(state): State<AppState>) -> impl IntoResponse {
+    let user_manager = state.user_source_manager.lock().unwrap();
+    let sources = user_manager.get_sources();
+    Json(ApiResponse::success(sources))
 }
 
 async fn update_user_sources(
@@ -231,110 +230,6 @@ async fn update_user_sources(
     }
 }
 
-async fn create_user_source(
-    Json(request): Json<serde_json::Value>
-) -> Json<ApiResponse<serde_json::Value>> {
-    // Load existing config
-    let mut config: types::UserSourcesConfig = match types::UserSourcesConfig::load().await {
-        Ok(config) => config,
-        Err(e) => {
-            // If file doesn't exist, create new config
-            if e.kind() == std::io::ErrorKind::NotFound {
-                types::UserSourcesConfig::new()
-            } else {
-                return Json(ApiResponse::error(format!("Failed to load user sources: {}", e)));
-            }
-        }
-    };
-    
-    // Parse the request as CreateUserSourceRequest first
-    let create_request: types::CreateUserSourceRequest = match serde_json::from_value(request) {
-        Ok(req) => req,
-        Err(e) => return Json(ApiResponse::error(format!("Invalid request data: {}", e))),
-    };
-    
-    // Convert string source_type to UserSourceType enum
-    let source_type = match create_request.source_type.as_str() {
-        "json" => types::UserSourceType::Json,
-        "web" => types::UserSourceType::Web,
-        _ => return Json(ApiResponse::error("Invalid source_type. Must be 'json' or 'web'".to_string())),
-    };
-    
-    // Create a new UserNewsSource with auto-generated fields
-    let mut source = types::UserNewsSource::new(
-        create_request.name,
-        create_request.title,
-        create_request.description,
-        source_type.clone(),
-        create_request.url,
-        create_request.selector,
-    );
-    
-    // Generate parsing rules for web sources
-    if matches!(source_type, types::UserSourceType::Web) {
-        info!("Auto-generating parsing rules for new web source: {}", source.name);
-        
-        match generate_parsing_rules_for_source(&mut source).await {
-            Ok(_) => info!("Successfully generated parsing rules for source: {}", source.name),
-            Err(e) => {
-                warn!("Failed to generate parsing rules for source {}: {}, will use AI fallback", source.name, e);
-                // Continue without rules - will use AI fallback
-            }
-        }
-    }
-    
-    // Add the new source
-    config.add_source(source.clone());
-    
-    // Save the updated config
-    if let Err(e) = config.save() {
-        return Json(ApiResponse::error(format!("Failed to save user sources: {}", e)));
-    }
-    
-    Json(ApiResponse::success(serde_json::to_value(source).unwrap()))
-}
-
-async fn delete_user_source(
-    axum::extract::Path(id): axum::extract::Path<String>
-) -> Json<ApiResponse<String>> {
-    info!("Attempting to delete user source with ID: {}", id);
-    
-    // Load existing config
-    let mut config: types::UserSourcesConfig = match types::UserSourcesConfig::load().await {
-        Ok(mut config) => {
-            info!("Loaded config with {} sources", config.user_sources.len());
-            config
-        },
-        Err(e) => {
-            error!("Failed to load user sources: {}", e);
-            return Json(ApiResponse::error(format!("Failed to load user sources: {}", e)));
-        }
-    };
-    
-    // Remove the source
-    match config.remove_source(&id) {
-        Some(removed_source) => {
-            info!("Successfully removed source: {}", removed_source.name);
-            info!("Config now has {} sources", config.user_sources.len());
-            
-            // Save the updated config
-            match config.save() {
-                Ok(_) => {
-                    info!("Successfully saved updated config");
-                    Json(ApiResponse::success("User source deleted successfully".to_string()))
-                },
-                Err(e) => {
-                    error!("Failed to save user sources: {}", e);
-                    Json(ApiResponse::error(format!("Failed to save user sources: {}", e)))
-                }
-            }
-        }
-        None => {
-            error!("User source not found with ID: {}", id);
-            Json(ApiResponse::error("User source not found".to_string()))
-        }
-    }
-}
 
 // Helper function to generate parsing rules for a source
 async fn generate_parsing_rules_for_source(source: &mut types::UserNewsSource) -> Result<(), anyhow::Error> {
@@ -815,17 +710,43 @@ async fn fetch_user_source_with_ai(source_name: &str, source_url: &str) -> Resul
             .clone()
     };
     
-    let news_items = match user_source.source_type.as_str() {
-        "json" => {
+    let news_items = match user_source.source_type {
+        types::UserSourceType::Json => {
             // For JSON API sources, fetch and parse JSON directly
             info!("Fetching JSON API content from: {}", source_url);
-            let json_content = scraper.fetch_html_direct(source_url, true).await
+            let json_content = scraper.fetch_html_direct(source_url, false).await
                 .map_err(|e| anyhow!("Failed to fetch JSON content: {}", e))?;
+            info!("Fetched JSON content (first 500 chars): {}", &json_content[..json_content.len().min(500)]);
             
-            ai_client.parse_news_from_json(source_url, &json_content).await
+            // Generate field mapping rules if not available
+            let field_mapping_rules = if user_source.field_mapping_rules.is_none() {
+                info!("Generating field mapping rules for new JSON API source: {}", source_name);
+                match ai_client.generate_field_mapping_rules(&json_content, source_url).await {
+                    Ok(rules) => {
+                        // Save the generated rules to the user source
+                        let mut config = types::UserSourcesConfig::load().await
+                            .map_err(|e| anyhow!("Failed to load user sources: {}", e))?;
+                        if let Some(source) = config.user_sources.iter_mut().find(|s| s.name == source_name) {
+                            source.field_mapping_rules = Some(rules.clone());
+                            if let Err(save_err) = config.save() {
+                                warn!("Failed to save field mapping rules: {}", save_err);
+                            }
+                        }
+                        Some(rules)
+                    }
+                    Err(e) => {
+                        warn!("Failed to generate field mapping rules: {}, using fallback", e);
+                        None
+                    }
+                }
+            } else {
+                user_source.field_mapping_rules.clone()
+            };
+            
+            ai_client.parse_news_from_json(source_url, &json_content, field_mapping_rules.as_ref()).await
                 .map_err(|e| anyhow!("AI JSON parsing failed: {}", e))?
         }
-        "web" => {
+        types::UserSourceType::Web => {
             // For web sources, fetch HTML and parse
             info!("Fetching HTML content from: {}", source_url);
             let html_content = scraper.fetch_html(source_url, true).await
@@ -1110,16 +1031,44 @@ async fn clear_cache(State(state): State<AppState>) -> impl IntoResponse {
 async fn proxy_image(
     Query(query): Query<ImageQuery>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
+    info!("图片代理请求: url='{}'", query.url);
+    
+    // 验证 URL 是否是有效的绝对 URL
+    if !query.url.starts_with("http://") && !query.url.starts_with("https://") {
+        warn!("图片 URL 不是有效的绝对路径: '{}'", query.url);
+        return Err((StatusCode::BAD_REQUEST, format!("图片 URL 必须是有效的绝对路径 (http:// 或 https://)，当前: '{}'", query.url)));
+    }
+    
+    // 从图片 URL 中提取域名作为 Referer
+    let referer = if let Ok(url) = url::Url::parse(&query.url) {
+        format!("{}://{}", url.scheme(), url.host_str().unwrap_or(""))
+    } else {
+        query.url.clone()
+    };
+    
     let client = reqwest::Client::builder()
         .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36")
-        .timeout(Duration::from_secs(10))
+        .timeout(Duration::from_secs(15))
         .build()
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("创建HTTP客户端失败: {}", e)))?;
 
-    match client.get(&query.url).send().await {
+    let request = client.get(&query.url)
+        .header("Accept", "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8")
+        .header("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8")
+        .header("Referer", &referer)
+        .header("sec-ch-ua", "\"Chromium\";v=\"123\", \"Not:A-Brand\";v=\"8\"")
+        .header("sec-ch-ua-mobile", "?0")
+        .header("sec-ch-ua-platform", "\"Windows\"")
+        .header("Sec-Fetch-Dest", "image")
+        .header("Sec-Fetch-Mode", "no-cors")
+        .header("Sec-Fetch-Site", "cross-site");
+
+    match request.send().await {
         Ok(response) => {
-            if !response.status().is_success() {
-                return Err((StatusCode::BAD_GATEWAY, format!("图片获取失败: {}", response.status())));
+            let status = response.status();
+            if !status.is_success() {
+                warn!("图片获取失败: {} - HTTP {}", query.url, status);
+                return Err((StatusCode::BAD_GATEWAY, format!("图片获取失败: HTTP {}", status)));
             }
 
             let content_type = response
@@ -1136,6 +1085,11 @@ async fn proxy_image(
                     resp.headers_mut().insert(
                         header::CONTENT_TYPE,
                         header::HeaderValue::from_str(&content_type).unwrap_or_else(|_| header::HeaderValue::from_static("image/jpeg"))
+                    );
+                    // 添加 CORS 头
+                    resp.headers_mut().insert(
+                        header::ACCESS_CONTROL_ALLOW_ORIGIN,
+                        header::HeaderValue::from_static("*")
                     );
                     Ok(resp)
                 }
@@ -1242,30 +1196,163 @@ async fn serve_icon() -> impl IntoResponse {
 //     Json(ApiResponse::success(sources))
 // }
 
-// // 创建用户数据源
-// async fn create_user_source(
-//     State(state): State<AppState>,
-//     Json(request): Json<CreateUserSourceRequest>,
-// ) -> impl IntoResponse {
-//     let mut user_manager = state.user_source_manager.lock().unwrap();
-//     match user_manager.add_source(request) {
-//         Ok(source) => Json(ApiResponse::success(source)),
-//         Err(e) => Json(ApiResponse::error(e.to_string())),
-//     }
-// }
+// 创建用户数据源
+async fn create_user_source(
+    State(state): State<AppState>,
+    Json(request): Json<CreateUserSourceRequest>,
+) -> impl IntoResponse {
+    info!("========== 开始创建用户数据源 ==========");
+    info!("请求参数: name={}, source_type={}, url={}", request.name, request.source_type, request.url);
+    
+    // 1. 创建数据源
+    let source = {
+        let mut user_manager = state.user_source_manager.lock().unwrap();
+        match user_manager.add_source(request) {
+            Ok(source) => source,
+            Err(e) => {
+                error!("创建数据源失败: {}", e);
+                return Json(ApiResponse::error(e.to_string()));
+            }
+        }
+    };
+    
+    info!("数据源创建成功: id={}, name={}", source.id, source.name);
+    
+    // 2. 根据 source_type 调用 AI 生成规则
+    let mut source_with_rules = source.clone();
+    
+    match source.source_type {
+        types::UserSourceType::Web => {
+            info!("检测到 HTML 模式数据源，准备调用 AI 生成解析规则...");
+            
+            // 初始化 AI 客户端
+            let ai_client = match AIClient::new().await {
+                Ok(client) => {
+                    info!("AI 客户端初始化成功");
+                    client
+                },
+                Err(e) => {
+                    warn!("AI 客户端初始化失败: {}，跳过规则生成", e);
+                    return Json(ApiResponse::success(source));
+                }
+            };
+            
+            // 检查 AI 是否启用
+            if !ai_client.is_enabled() {
+                warn!("AI 功能未启用，跳过规则生成");
+                return Json(ApiResponse::success(source));
+            }
+            
+            info!("AI 功能已启用，provider: {}", ai_client.get_provider_name());
+            
+            // 获取 HTML 内容
+            let scraper = WebScraper::new();
+            let html_content = if let Some(selector_snippet) = &source.selector {
+                info!("使用提供的 selector 片段 ({} 字节)", selector_snippet.len());
+                selector_snippet.clone()
+            } else {
+                info!("从 URL 获取 HTML 内容: {}", source.url);
+                match scraper.fetch_html(&source.url, true).await {
+                    Ok(content) => {
+                        info!("成功获取 HTML 内容 ({} 字节)", content.len());
+                        content
+                    },
+                    Err(e) => {
+                        warn!("获取 HTML 内容失败: {}，跳过规则生成", e);
+                        return Json(ApiResponse::success(source));
+                    }
+                }
+            };
+            
+            // 调用 AI 生成结构化提取规则
+            info!("开始调用 AI 生成结构化提取规则...");
+            match ai_client.generate_structured_extraction_rules(&source.url, &html_content).await {
+                Ok(rules) => {
+                    info!("AI 成功生成结构化提取规则: item_node={}", rules.selectors.item_node);
+                    info!("生成的字段: {:?}", rules.selectors.fields.keys().collect::<Vec<_>>());
+                    source_with_rules.parsing_rules = Some(types::ParsingRulesVariant::Structured(rules));
+                },
+                Err(e) => {
+                    warn!("AI 生成结构化提取规则失败: {}", e);
+                }
+            }
+        }
+        types::UserSourceType::Json => {
+            info!("检测到 API 模式数据源，准备调用 AI 生成字段映射规则...");
+            
+            // 初始化 AI 客户端
+            let ai_client = match AIClient::new().await {
+                Ok(client) => {
+                    info!("AI 客户端初始化成功");
+                    client
+                },
+                Err(e) => {
+                    warn!("AI 客户端初始化失败: {}，跳过规则生成", e);
+                    return Json(ApiResponse::success(source));
+                }
+            };
+            
+            // 检查 AI 是否启用
+            if !ai_client.is_enabled() {
+                warn!("AI 功能未启用，跳过规则生成");
+                return Json(ApiResponse::success(source));
+            }
+            
+            info!("AI 功能已启用，provider: {}", ai_client.get_provider_name());
+            
+            // 获取 JSON 内容
+            let scraper = WebScraper::new();
+            info!("从 URL 获取 JSON 内容: {}", source.url);
+            match scraper.fetch_html_direct(&source.url, false).await {
+                Ok(json_content) => {
+                    info!("成功获取 JSON 内容 ({} 字节)", json_content.len());
+                    
+                    // 调用 AI 生成字段映射规则
+                    info!("开始调用 AI 生成字段映射规则...");
+                    match ai_client.generate_field_mapping_rules(&json_content, &source.url).await {
+                        Ok(rules) => {
+                            info!("AI 成功生成字段映射规则");
+                            source_with_rules.field_mapping_rules = Some(rules);
+                        },
+                        Err(e) => {
+                            warn!("AI 生成字段映射规则失败: {}", e);
+                        }
+                    }
+                },
+                Err(e) => {
+                    warn!("获取 JSON 内容失败: {}，跳过规则生成", e);
+                }
+            }
+        }
+    }
+    
+    // 3. 保存更新后的数据源（包含规则）
+    if source_with_rules.parsing_rules.is_some() || source_with_rules.field_mapping_rules.is_some() {
+        info!("保存生成的规则到数据源配置...");
+        let mut user_manager = state.user_source_manager.lock().unwrap();
+        if let Err(e) = user_manager.update_source(source_with_rules.clone()) {
+            warn!("保存规则失败: {}", e);
+        } else {
+            info!("规则保存成功");
+        }
+    }
+    
+    info!("========== 用户数据源创建完成 ==========");
+    Json(ApiResponse::success(source_with_rules))
+}
 
 // // 删除用户数据源
-// async fn delete_user_source(
-//     State(state): State<AppState>,
-//     Path(id): Path<String>,
-// ) -> impl IntoResponse {
-//     let mut user_manager = state.user_source_manager.lock().unwrap();
-//     match user_manager.remove_source(&id) {
-//         Ok(Some(source)) => Json(ApiResponse::success(source)),
-//         Ok(None) => Json(ApiResponse::error("数据源不存在".to_string())),
-//         Err(e) => Json(ApiResponse::error(e.to_string())),
-//     }
-// }
+async fn delete_user_source(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> impl IntoResponse {
+    let mut user_manager = state.user_source_manager.lock().unwrap();
+    match user_manager.remove_source(&id) {
+        Ok(Some(source)) => Json(ApiResponse::success(source)),
+        Ok(None) => Json(ApiResponse::error("数据源不存在".to_string())),
+        Err(e) => Json(ApiResponse::error(e.to_string())),
+    }
+}
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

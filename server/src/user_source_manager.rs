@@ -41,14 +41,21 @@ impl UserSourceManager {
     }
 
     pub fn add_source(&mut self, request: CreateUserSourceRequest) -> Result<UserNewsSource> {
+        info!("add_source 请求: name={}, source_type={}, url='{}'", request.name, request.source_type, request.url);
+        
         // 验证名称唯一性
         if self.storage.find_source_by_name(&request.name).is_some() {
             return Err(anyhow!("数据源名称 '{}' 已存在", request.name));
         }
 
+        // 清理 URL（去除前后空格）
+        let url = request.url.trim();
+        info!("清理后的 URL: '{}'", url);
+
         // 验证URL格式
-        if !request.url.starts_with("http://") && !request.url.starts_with("https://") {
-            return Err(anyhow!("URL 必须以 http:// 或 https:// 开头"));
+        if !url.starts_with("http://") && !url.starts_with("https://") {
+            error!("URL 验证失败: '{}', 长度: {}, 字节: {:?}", url, url.len(), url.as_bytes());
+            return Err(anyhow!("URL 必须以 http:// 或 https:// 开头，当前 URL: '{}'", url));
         }
 
         let source_type = match request.source_type.as_str() {
@@ -67,7 +74,7 @@ impl UserSourceManager {
             request.title,
             request.description,
             source_type,
-            request.url,
+            url.to_string(),
             request.selector,
         );
 
@@ -97,6 +104,17 @@ impl UserSourceManager {
 
     pub fn find_source(&self, name: &str) -> Option<UserNewsSource> {
         self.storage.find_source_by_name(name).cloned()
+    }
+
+    pub fn update_source(&mut self, source: UserNewsSource) -> Result<()> {
+        if let Some(index) = self.storage.user_sources.iter().position(|s| s.id == source.id) {
+            self.storage.user_sources[index] = source;
+            self.save()?;
+            info!("更新用户数据源: {}", self.storage.user_sources[index].name);
+            Ok(())
+        } else {
+            Err(anyhow!("数据源不存在: {}", source.id))
+        }
     }
 
     // 获取用户数据源的新闻内容
