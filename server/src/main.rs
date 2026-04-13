@@ -1123,8 +1123,8 @@ async fn index() -> impl IntoResponse {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NewsLatest API</title>
-    <link rel="icon" type="image/x-icon" href="/icon.ico">
-    <link rel="shortcut icon" href="/icon.ico">
+    <link rel="icon" type="image/x-icon" href="config/icon.ico">
+    <link rel="shortcut icon" href="config/icon.ico">
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; }
         .header { text-align: center; margin-bottom: 40px; }
@@ -1427,7 +1427,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/api/user-sources/generate-structured-rules", post(generate_structured_extraction_rules))
         // 静态文件和首页
         .route("/", get(index))
-        .route("/icon.ico", get(serve_icon))
+        .route("/config/icon.ico", get(serve_icon))
         .fallback(index)
         // CORS配置
         .layer(
