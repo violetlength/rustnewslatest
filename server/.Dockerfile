@@ -44,67 +44,63 @@
 # # 明确指定二进制路径，配置文件在当前目录
 # CMD ["/usr/local/bin/newslatest-server"]
 
-# --- 构建阶段 ---
-# 使用一个版本明确且稳定的 Rust 镜像
-FROM rust:1.82-bookworm as builder
 
-# 设置工作目录
+# --- 构建阶段 ---
+# 1. 明确指定使用 1.92 版本，并基于 bookworm (Debian 12)
+# 如果 1.92 默认是 trixie，也可以写成 rust:1.92-triage
+FROM rust:1.92-bookworm as builder
+
 WORKDIR /app
 
-# 1. 安装构建依赖
-# libssl-dev 用于编译依赖 openssl-sys 的 crate
+# 2. 安装构建依赖
+# 注意：Bookworm 默认源可能需要更新，libssl-dev 用于编译 openssl-sys
 RUN apt-get update && \
     apt-get install -y pkg-config libssl-dev && \
     rm -rf /var/lib/apt/lists/*
 
-# 2. 缓存 Rust 依赖
-# 复制 Cargo 文件
+# 3. 优化依赖缓存 (利用 Docker Layer Cache)
+# 先复制 Cargo 配置文件
 COPY Cargo.toml ./
-# 创建一个虚拟的 main.rs 来触发依赖下载和编译
+# 创建虚拟 main.rs 骗过 cargo，使其只下载和编译依赖
 RUN mkdir src && echo "fn main() {}" > src/main.rs
-# 设置 CARGO_HOME 环境变量，确保依赖被缓存在 /app/cargo-cache
-ENV CARGO_HOME=/app/cargo-cache
-RUN cargo fetch
+# 这一步会下载依赖并编译，如果依赖没变，下次构建会直接命中缓存
 RUN cargo build --release
-# 删除虚拟源码，保留编译好的依赖
+# 删除虚拟源码
 RUN rm -rf src
 
-# 3. 复制实际源代码并编译
-# 复制整个 src 目录，确保所有文件都被包含
+# 4. 复制真实源码并编译
 COPY src ./src
-# 再次构建，这次会使用真实的源代码
-# cargo build 会自动利用上一步缓存的依赖
+# 编译真实项目
 RUN cargo build --release
 
 # --- 运行阶段 ---
-# 关键修改：使用与构建阶段相同的基础镜像版本！
-# 这确保了运行时的 GLIBC 版本与编译时一致，彻底避免兼容性问题。
-FROM rust:1.82-bookworm as runner
+# 5. 关键点：运行环境必须与构建环境的 GLIBC 版本兼容！
+# 既然必须用 Rust 1.92 (基于 Bookworm)，这里也必须用 Bookworm
+# 不要使用 bullseye 或 alpine，否则会继续报 GLIBC 错误
+FROM debian:bookworm-slim
 
-# 1. 安装运行时依赖
-RUN apt-get update && \
-    apt-get install -y ca-certificates openssl && \
-    rm -rf /var/lib/apt/lists/*
-
-# 2. 创建非 root 用户以增强安全性
-RUN useradd -r -u 1000 -g root appuser
-
-# 3. 设置工作目录
 WORKDIR /app
 
-# 4. 复制编译产物和配置文件
+# 6. 安装运行时必要的库
+# ca-certificates: 用于 HTTPS 请求
+# libssl3: 运行时需要的 SSL 库 (Bookworm 中是 libssl3)
+RUN apt-get update && \
+    apt-get install -y ca-certificates libssl3 && \
+    rm -rf /var/lib/apt/lists/*
+
+# 7. 创建非 root 用户 (安全最佳实践)
+# 虽然 slim 镜像可能没有 useradd，但通常都有。如果没有，需先 apt install adduser
+RUN useradd -r -u 1000 -g root appuser
+
+# 8. 复制编译产物
 COPY --from=builder /app/target/release/newslatest-server /usr/local/bin/
 COPY config.toml ./config.toml
 COPY icon.ico ./icon.ico
 
-# 5. 修改文件所有者，让 appuser 可以读取
+# 9. 授权并切换用户
 RUN chown -R appuser:root /app
-
-# 6. 切换到非 root 用户
 USER appuser
 
-# 7. 暴露端口
 EXPOSE 8080
 
-# 8. 启动应用
 CMD ["/usr/local/bin/newslatest-server"]

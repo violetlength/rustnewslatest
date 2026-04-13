@@ -1,0 +1,283 @@
+{
+  "user_sources": [
+    {
+      "id": "3d08c6a4-0091-4456-92ff-a539d86d2ee7",
+      "name": "dahe",
+      "title": "dahe",
+      "description": "dahe",
+      "source_type": "web",
+      "url": "https://news.dahe.cn/hnyw/",
+      "selector": "<div class=\"newsleft\" id=\"newslist\">         <ul class=\"newsleftul\" id=\"content\"><li><a href=\"https://news.dahe.cn/2026/04-13/2076917.html\" target=\"_blank\">中共河南省委办公厅 河南省人民政府办公厅 关于进一步提升基层应急管...</a><span>2026-04-13 07:21</span></li><li><a href=\"https://news.dahe.cn/2026/04-13/2076914.html\" target=\"_blank\">传承篇 新农人的“守”与“变”</a><span>2026-04-13 07:18</span></li><li><a href=\"https://news.dahe.cn/2026/04-13/2076913.html\" target=\"_blank\">文旅篇 药香里的“诗与远方”</a><span>2026-04-13 07:17</span></li><li><a href=\"https://news.dahe.cn/2026/04-13/2076912.html\" target=\"_blank\">科技篇 创新让怀药味更浓</a><span>2026-04-13 07:17</span></li><li style=\"border-bottom: 1px dashed rgb(228, 228, 228);\"><a href=\"https://news.dahe.cn/2026/04-13/2076911.html\" target=\"_blank\">三千年怀药的新生——探寻焦作四大怀药的产业跃迁之路</a><span>2026-04-13 07:17</span></li><li><a href=\"https://news.dahe.cn/2026/04-13/2076910.html\" target=\"_blank\">“2025年度河南省十大考古新发现”名单揭晓 唐代公主宅邸长啥样？...</a><span>2026-04-13 07:16</span></li><li><a href=\"https://news.dahe.cn/2026/04-13/2076909.html\" target=\"_blank\">镜头里的河南丨春日竖店 更加鲜活</a><span>2026-04-13 07:15</span></li><li><a href=\"https://news.dahe.cn/2026/04-13/2076908.html\" target=\"_blank\">光济源本身就可以做成一条内容丰富的文旅线</a><span>2026-04-13 07:15</span></li><li><a href=\"https://news.dahe.cn/2026/04-13/2076907.html\" target=\"_blank\">“饭圈”不是法外圈 真正的体育迷懂拼搏、知尊重</a><span>2026-04-13 07:13</span></li><li style=\"border-bottom: 1px dashed rgb(228, 228, 228);\"><a href=\"https://news.dahe.cn/2026/04-13/2076906.html\" target=\"_blank\">竞逐“它经济”赛道 河南要闯哪些“关卡”？</a><span>2026-04-13 07:12</span></li><li><a href=\"https://news.dahe.cn/2026/04-13/2076905.html\" target=\"_blank\">你好，我是技术经理人</a><span>2026-04-13 07:09</span></li><li><a href=\"https://news.dahe.cn/2026/04-13/2076903.html\" target=\"_blank\">河南政法系统推出30项爱民承诺事项</a><span>2026-04-13 07:07</span></li><li><a href=\"https://news.dahe.cn/2026/04-13/2076902.html\" target=\"_blank\">关注一季度经济数据丨周口港货物吞吐量超1500万吨</a><span>2026-04-13 07:06</span></li><li><a href=\"https://news.dahe.cn/2026/04-13/2076901.html\" target=\"_blank\">关注一季度经济数据丨河南新增“认证贷”近百亿元</a><span>2026-04-13 07:06</span></li><li style=\"border-bottom: 1px dashed rgb(228, 228, 228);\"><a href=\"https://news.dahe.cn/2026/04-13/2076900.html\" target=\"_blank\">“老兵”新传</a><span>2026-04-13 07:05</span></li><li><a href=\"https://news.dahe.cn/2026/04-13/2076899.html\" target=\"_blank\">清正廉洁 从家出发</a><span>2026-04-13 07:04</span></li><li><a href=\"https://news.dahe.cn/2026/04-13/2076898.html\" target=\"_blank\">了不起的豫商丨追风逐电 再造未来——明阳集团创始人、董事长张传卫访...</a><span>2026-04-13 07:03</span></li><li><a href=\"https://news.dahe.cn/2026/04-13/2076897.html\" target=\"_blank\">河南为何三场调研专注黄河</a><span>2026-04-13 07:02</span></li><li><a href=\"https://news.dahe.cn/2026/04-12/2076789.html\" target=\"_blank\">2026年全国水工监测工职业技能竞赛全国总决赛闭幕 水利“哨兵”信...</a><span>2026-04-12 08:01</span></li><li style=\"border-bottom: 1px dashed rgb(228, 228, 228);\"><a href=\"https://news.dahe.cn/2026/04-12/2076788.html\" target=\"_blank\">“十五五”河南省重点研发专项黄河流域生态保护专题首批项目启动</a><span>2026-04-12 08:01</span></li><li><a href=\"https://news.dahe.cn/2026/04-12/2076787.html\" target=\"_blank\">人工智能时代如何打造一人公司 河南首个“AI+OPC”生态联盟启动</a><span>2026-04-12 08:01</span></li><li><a href=\"https://news.dahe.cn/2026/04-12/2076786.html\" target=\"_blank\">工业“血液”的国产突围</a><span>2026-04-12 08:00</span></li><li><a href=\"https://news.dahe.cn/2026/04-12/2076785.html\" target=\"_blank\">印尼大印尼行动党干部考察团访问河南 触摸中国式现代化的现实脉动</a><span>2026-04-12 08:00</span></li><li><a href=\"https://news.dahe.cn/2026/04-12/2076784.html\" target=\"_blank\">我省新发现三处古村落遗址</a><span>2026-04-12 07:59</span></li><li style=\"border-bottom: 1px dashed rgb(228, 228, 228);\"><a href=\"https://news.dahe.cn/2026/04-12/2076783.html\" target=\"_blank\">2026年第二十届王屋山文化旅游节开幕</a><span>2026-04-12 07:59</span></li><li><a href=\"https://news.dahe.cn/2026/04-12/2076782.html\" target=\"_blank\">河南欧美同学会第二届理事会第三次会议召开</a><span>2026-04-12 07:58</span></li><li><a href=\"https://news.dahe.cn/2026/04-12/2076781.html\" target=\"_blank\">推动全盟社会服务工作再上新台阶</a><span>2026-04-12 07:58</span></li><li><a href=\"https://news.dahe.cn/2026/04-12/2076780.html\" target=\"_blank\">省管企业树立和践行正确政绩观学习教育座谈会举行</a><span>2026-04-12 07:58</span></li><li><a href=\"https://news.dahe.cn/2026/04-12/2076779.html\" target=\"_blank\">省各民主党派、无党派人士“参政为公、实干为民”主题教育启动会召开</a><span>2026-04-12 07:57</span></li><li style=\"border-bottom: 1px dashed rgb(228, 228, 228);\"><a href=\"https://news.dahe.cn/2026/04-12/2076778.html\" target=\"_blank\">2025年河南考古十大新发现揭晓</a><span>2026-04-12 07:57</span></li><li><a href=\"https://news.dahe.cn/2026/04-12/2076777.html\" target=\"_blank\">我国最北端核电站核心部件用上洛阳造</a><span>2026-04-12 07:55</span></li><li><a href=\"https://news.dahe.cn/2026/04-12/2076776.html\" target=\"_blank\">河南智造走出去丨宇通新能源无人驾驶矿卡落地新疆准东煤田 国家级整装...</a><span>2026-04-12 07:55</span></li><li><a href=\"https://news.dahe.cn/2026/04-12/2076775.html\" target=\"_blank\">收起荣誉 本色不改——与王妙丽的再相见</a><span>2026-04-12 07:54</span></li><li><a href=\"https://news.dahe.cn/2026/04-11/2076695.html\" target=\"_blank\">《太行·红日》上新</a><span>2026-04-11 09:05</span></li><li style=\"border-bottom: 1px dashed rgb(228, 228, 228);\"><a href=\"https://news.dahe.cn/2026/04-11/2076691.html\" target=\"_blank\">“三大球”精品赛事河南省两项上榜</a><span>2026-04-11 08:14</span></li><li><a href=\"https://news.dahe.cn/2026/04-11/2076690.html\" target=\"_blank\">WCBA：河南女篮“冲A”成功！</a><span>2026-04-11 08:14</span></li><li><a href=\"https://news.dahe.cn/2026/04-11/2076689.html\" target=\"_blank\">19岁河南小将射落世界杯金牌</a><span>2026-04-11 08:14</span></li><li><a href=\"https://news.dahe.cn/2026/04-11/2076688.html\" target=\"_blank\">红花岭上有江南</a><span>2026-04-11 08:13</span></li><li><a href=\"https://news.dahe.cn/2026/04-11/2076687.html\" target=\"_blank\">我的专业C位出道丨一场“行驶”在铁路上的圆梦之旅</a><span>2026-04-11 08:13</span></li><li style=\"border-bottom: 1px dashed rgb(228, 228, 228);\"><a href=\"https://news.dahe.cn/2026/04-11/2076686.html\" target=\"_blank\">今年起不再校测，4月11日开启申报 2026年高招高校专项计划政策...</a><span>2026-04-11 08:12</span></li></ul><div class=\"paging clearfix\" id=\"paging\"> <a class=\"fl paging_btn paging_home\" style=\"background: rgb(44, 115, 172);\">首页</a> <a class=\"fl paging_btn paging_prev\" style=\"background: rgb(44, 115, 172);\">上一页</a> <a class=\"fl paging_btn paging_next\" style=\"background: rgb(44, 115, 172);\">下一页</a> <div class=\"fl switch_num\">共<span class=\"paging_all_num\">13</span>页 转到第 <input type=\"text\" value=\"1\" class=\"paging_num\">页 </div> <a class=\"fl paging_btn paging_skip\" style=\"background: rgb(44, 115, 172);\">跳转</a> <a class=\"fl paging_btn marginR0 paging_end\" style=\"background: rgb(44, 115, 172);\">尾页</a> </div>     </div>",
+      "parsing_rules": {
+        "task": "extract_news_list",
+        "source_url": "https://news.dahe.cn/hnyw/",
+        "rules_version": "1.0",
+        "selectors": {
+          "root_container": "div#newslist",
+          "item_list": "ul#content",
+          "item_node": "li",
+          "fields": {
+            "title": {
+              "selector": "a",
+              "attribute": "text",
+              "required": true,
+              "base_url": "https://news.dahe.cn/hnyw/",
+              "format": null,
+              "clean": true
+            },
+            "url": {
+              "selector": "a",
+              "attribute": "href",
+              "required": true,
+              "base_url": "https://news.dahe.cn/hnyw/",
+              "format": null,
+              "clean": true
+            },
+            "timestamp": {
+              "selector": "span",
+              "attribute": "text",
+              "required": false,
+              "base_url": "https://news.dahe.cn/hnyw/",
+              "format": null,
+              "clean": true
+            }
+          }
+        },
+        "notes": "Auto-generated rules for https://news.dahe.cn/hnyw/ on 2026-04-13",
+        "created_at": "2026-04-13T02:20:38.770262200Z",
+        "success_rate": 1.0,
+        "total_attempts": 0
+      },
+      "field_mapping_rules": null,
+      "created_at": "2026-04-13T02:20:35.302348600Z",
+      "user_id": null,
+      "is_active": true
+    },
+    {
+      "id": "ada994fc-6cb9-4430-a114-5a49fbea6bdf",
+      "name": "hellogithub",
+      "title": "hellogithub",
+      "description": "hellogithub",
+      "source_type": "json",
+      "url": "https://api.hellogithub.com/v1/?sort_by=featured&page=1&rank_by=newest&tid=all",
+      "selector": "",
+      "parsing_rules": null,
+      "field_mapping_rules": {
+        "data_path": "data",
+        "field_mappings": {
+          "author": {
+            "required": false,
+            "source_field": "author",
+            "transform": "direct",
+            "transform_params": null
+          },
+          "cover": {
+            "required": false,
+            "source_field": "author_avatar",
+            "transform": "direct",
+            "transform_params": null
+          },
+          "desc": {
+            "required": false,
+            "source_field": "summary",
+            "transform": "truncate",
+            "transform_params": 200
+          },
+          "hot": {
+            "required": false,
+            "source_field": "is_hot",
+            "transform": "to_integer",
+            "transform_params": null
+          },
+          "id": {
+            "required": true,
+            "source_field": "item_id",
+            "transform": "direct",
+            "transform_params": null
+          },
+          "mobile_url": {
+            "required": false,
+            "source_field": "full_name",
+            "transform": "prepend",
+            "transform_params": "https://github.com/"
+          },
+          "timestamp": {
+            "required": false,
+            "source_field": "updated_at",
+            "transform": "format",
+            "transform_params": "iso8601"
+          },
+          "title": {
+            "required": true,
+            "source_field": "title",
+            "transform": "direct",
+            "transform_params": null
+          },
+          "url": {
+            "required": true,
+            "source_field": "full_name",
+            "transform": "prepend",
+            "transform_params": "https://github.com/"
+          }
+        }
+      },
+      "created_at": "2026-04-13T02:31:26.606654400Z",
+      "user_id": null,
+      "is_active": true
+    },
+    {
+      "id": "70ad763d-12db-4963-b8e4-14c5a7013c39",
+      "name": "ifeng",
+      "title": "ifeng",
+      "description": "ifeng",
+      "source_type": "web",
+      "url": "https://news.ifeng.com/",
+      "selector": "<div class=\"index_content_RQk8t\"><div><div class=\"index_topNews_-d4iq\"><h3 class=\"index_first_title_-cRf9 top_news_title\"><a href=\"https://news.ifeng.com/c/8sHfOA8XX7n\" title=\"学习进行时丨再续“乒乓情缘” 推进友好事业\" target=\"_blank\" rel=\"\">学习进行时丨再续“乒乓情缘” 推进友好事业</a></h3><h3 class=\"index_second_title_m8vr- top_news_title\"><a href=\"https://news.ifeng.com/c/8sHfkCCX0C7\" title=\"千年运河正青春\" target=\"_blank\" rel=\"\">千年运河正青春</a><a class=\"index_children_pw614\" href=\"https://news.ifeng.com/c/8sHfkCCX0C9\" title=\"“西迁精神”的核心是爱国主义\" target=\"_blank\" rel=\"\">“西迁精神”的核心是爱国主义</a></h3><h3 class=\"index_second_title_m8vr- top_news_title\"><a href=\"https://news.ifeng.com/c/8sHhcqCsbIP\" title=\"读懂一季度车市，读懂中国汽车未来\" target=\"_blank\" rel=\"\">读懂一季度车市，读懂中国汽车未来</a></h3></div></div><div><div class=\"index_topNews_-d4iq\"><h3 class=\"index_first_title_-cRf9 top_news_title\"><a href=\"//news.ifeng.com/loc/timeline/event/8r727OWpK5W\" title=\"伊朗战争丨伊朗议长：美国人很快会怀念现在的油价\" target=\"_blank\" rel=\"\">伊朗战争丨伊朗议长：美国人很快会怀念现在的油价</a></h3><h3 class=\"index_second_title_m8vr- top_news_title\"><a href=\"//news.ifeng.com/c/8sHe30d2OTB\" title=\"“这场危机过后，中国或许是最明确的赢家”\" target=\"_blank\" rel=\"\">“这场危机过后，中国或许是最明确的赢家”</a></h3><h3 class=\"index_second_title_m8vr- top_news_title\"><a href=\"//news.ifeng.com/c/8sHcv8aQnGe\" title=\"匈牙利国会选举，欧尔班承认败选，毛焦尔胜利游行\" target=\"_blank\" rel=\"\">匈牙利国会选举，欧尔班承认败选，毛焦尔胜利游行</a></h3><h3 class=\"index_second_title_m8vr- top_news_title\"><div p_41667=\"\" c=\"41667\" pp_41667=\"\" style=\"position: relative;\"><div class=\"_bh4wmy6wsto\" style=\"overflow: hidden;\"><iframe id=\"iframeu6796891_0\" name=\"iframeu6796891_0\" src=\"https://pos.baidu.com/gcom?conwid=740&amp;conhei=27&amp;rdid=6796891&amp;dc=3&amp;di=u6796891&amp;s1=2759735769&amp;s2=3001660222&amp;dri=0&amp;dis=0&amp;dai=4&amp;ps=558x327&amp;enu=encoding&amp;exps=110277,110275,110261,110252,110011&amp;ant=0&amp;psi=6044ecfb588d53c4&amp;dcb=___adblockplus_&amp;dtm=HTML_POST&amp;dvi=0.0&amp;dci=-1&amp;dpt=none&amp;tpr=1776056823341&amp;ti=%E8%B5%84%E8%AE%AF_%E5%87%A4%E5%87%B0%E7%BD%91&amp;ari=2&amp;ver=0620&amp;dbv=2&amp;drs=3&amp;pcs=1654x911&amp;pss=1654x4142&amp;cfv=0&amp;cpl=5&amp;chi=1&amp;cce=true&amp;cec=UTF-8&amp;tlm=1776056600&amp;prot=2&amp;rw=911&amp;ltu=https%3A%2F%2Fnews.ifeng.com%2F&amp;ltr=https%3A%2F%2Fwww.ifeng.com%2F&amp;lcr=https%3A%2F%2Fwww.baidu.com%2Flink%3Furl%3D7joH9JD70YNaAj0BXms-AuF5-btGy9hfax-Xtj4pPKi%26wd%3D%26eqid%3D95d8f2ad01c6a00b0000000669dc792b&amp;ecd=1&amp;dft=0&amp;uc=1920x1032&amp;pis=-1x-1&amp;sr=1920x1080&amp;tcn=1776056825&amp;qn=89a178285aea5662&amp;ft=1\" width=\"740\" height=\"27\" scrolling=\"no\" frameborder=\"0\"></iframe></div><img src=\"http://x0.ifengimg.com/feprod/c/2023_6_5/18_8_26/ad-logo.png\" style=\"position: absolute; right: 0px; top: 12px; width: 33px; height: 11px; opacity: 0.8;\"></div></h3></div></div><div><ul class=\"news-stream-basic-news-list\"><li class=\"news-stream-newsStream-news-item-has-image clearfix news_item\" data-id=\"7449317345006194908\"><a class=\"news-stream-newsStream-image-link\" href=\"//news.ifeng.com/c/8sHx3IfVuE0\" title=\"特朗普声称对伊朗很好：“只炸了一座桥”\" target=\"_blank\"><div class=\"news-stream-newsStream-play\"></div><img src=\"//d.ifengimg.com/w144_h80_ablur_q90/x0.ifengimg.com/ucms/2026_16/8D847531D4E08D55BACB08BD417DA42ECFE97183_size945_w975_h549.png\" alt=\"特朗普声称对伊朗很好：“只炸了一座桥”\" width=\"144\" height=\"80\"></a><div class=\"news-stream-newsStream-news-item-infor\"><h2 class=\"news-stream-newsStream-mr13 news-stream-newsStream-news-item-title news-stream-newsStream-news-item-title-height\"><a href=\"//news.ifeng.com/c/8sHx3IfVuE0\" title=\"特朗普声称对伊朗很好：“只炸了一座桥”\" target=\"_blank\">特朗普声称对伊朗很好：“只炸了一座桥”</a></h2><div class=\"clearfix\"><span class=\"news-stream-newsStream-mr10 news-stream-newsStream-text\">今日俄罗斯RT</span><time class=\"news-stream-newsStream-text\">今天 12:50</time><a class=\"news-stream-newsStream-ly ly\" id=\"count7449317345006194908\" href=\"https://gentie.ifeng.com/view.html?docUrl=ucms_8sHx3IfVuE0&amp;docName=特朗普声称对伊朗很好：“只炸了一座桥”&amp;skey=672cff&amp;pcUrl=https://news.ifeng.com/c/8sHx3IfVuE0\" target=\"_blank\">0</a></div></div></li><li class=\"news-stream-newsStream-news-item-has-image clearfix news_item\" data-id=\"7449311695362593260\"><a class=\"news-stream-newsStream-image-link\" href=\"//news.ifeng.com/c/8sHvRppV6mS\" title=\"乌克兰称愿帮忙“对付伊朗”，黎巴嫩真主党：先管好你自己\" target=\"_blank\"><img src=\"//d.ifengimg.com/w144_h80_ablur_q90/x0.ifengimg.com/ucms/2026_16/95186336474406AD6DC22B4BD8344999DC99AFBE_size136_w800_h450.jpg\" alt=\"乌克兰称愿帮忙“对付伊朗”，黎巴嫩真主党：先管好你自己\" width=\"144\" height=\"80\"></a><div class=\"news-stream-newsStream-news-item-infor\"><h2 class=\"news-stream-newsStream-mr13 news-stream-newsStream-news-item-title news-stream-newsStream-news-item-title-height\"><a href=\"//news.ifeng.com/c/8sHvRppV6mS\" title=\"乌克兰称愿帮忙“对付伊朗”，黎巴嫩真主党：先管好你自己\" target=\"_blank\">乌克兰称愿帮忙“对付伊朗”，黎巴嫩真主党：先管好你自己</a></h2><div class=\"clearfix\"><time class=\"news-stream-newsStream-text\">今天 12:32</time><a class=\"news-stream-newsStream-ly ly\" id=\"count7449311695362593260\" href=\"https://gentie.ifeng.com/view.html?docUrl=ucms_8sHvRppV6mS&amp;docName=乌克兰称愿帮忙“对付伊朗”，黎巴嫩真主党：先管好你自己&amp;skey=6713ee&amp;pcUrl=https://news.ifeng.com/c/8sHvRppV6mS\" target=\"_blank\">0</a></div></div></li><li class=\"news-stream-newsStream-news-item-has-image clearfix news_item\" data-id=\"7425449830748529576\"><a class=\"news-stream-newsStream-image-link\" href=\"//v.ifeng.com/c/8qWdcKLOTH6\" title=\"2026有中华酒就有年味———全球华人共庆丙午中国年\" target=\"_blank\"><div class=\"news-stream-newsStream-play\"></div><img src=\"//d.ifengimg.com/w144_h80_ablur_q90/x0.ifengimg.com/ucms/2026_06/F644AE2E1D8C6B2790742F795C248B8A38C2488D_size70_w702_h351.jpg\" alt=\"2026有中华酒就有年味———全球华人共庆丙午中国年\" width=\"144\" height=\"80\"></a><div class=\"news-stream-newsStream-news-item-infor\"><h2 class=\"news-stream-newsStream-mr13 news-stream-newsStream-news-item-title news-stream-newsStream-news-item-title-height\"><a href=\"//v.ifeng.com/c/8qWdcKLOTH6\" title=\"2026有中华酒就有年味———全球华人共庆丙午中国年\" target=\"_blank\">2026有中华酒就有年味———全球华人共庆丙午中国年</a></h2><div class=\"clearfix\"><time class=\"news-stream-newsStream-text\">02-06 16:17</time><a class=\"news-stream-newsStream-ly ly\" id=\"count7425449830748529576\" href=\"https://gentie.ifeng.com/view.html?docUrl=ucms_8qWdcKLOTH6&amp;docName=2026有中华酒就有年味———全球华人共庆丙午中国年&amp;skey=10747e&amp;pcUrl=https://v.ifeng.com/c/8qWdcKLOTH6\" target=\"_blank\">0</a></div></div></li></ul></div><div><ul class=\"news-stream-basic-news-list\"><li class=\"news-stream-newsStream-news-item-ad\"><div p_1039=\"\" c=\"1039\" pp_1039=\"\"><iframe frameborder=\"0\" border=\"0\" scrolling=\"no\" style=\"width: 640px; height: 80px;\"></iframe></div></li><li class=\"news-stream-newsStream-news-item-ad\"><div p_1035=\"\" c=\"1035\" pp_1035=\"\"><iframe frameborder=\"0\" border=\"0\" scrolling=\"no\" style=\"width: 640px; height: 90px;\"></iframe></div></li><li class=\"news-stream-newsStream-news-item-has-image clearfix news_item\" data-id=\"7449311790535544976\"><a class=\"news-stream-newsStream-image-link\" href=\"//news.ifeng.com/c/8sHvTViP7Am\" title=\"美以对伊军事行动加剧分裂，北约面临前所未有“生存危机”\" target=\"_blank\"><div class=\"news-stream-newsStream-play\"></div><img src=\"//d.ifengimg.com/w144_h80_ablur_q90/x0.ifengimg.com/ucms/2026_16/51E9B15266CB9A108CF706E23EA349D9412D108B_size714_w975_h549.png\" alt=\"美以对伊军事行动加剧分裂，北约面临前所未有“生存危机”\" width=\"144\" height=\"80\"></a><div class=\"news-stream-newsStream-news-item-infor\"><h2 class=\"news-stream-newsStream-mr13 news-stream-newsStream-news-item-title news-stream-newsStream-news-item-title-height\"><a href=\"//news.ifeng.com/c/8sHvTViP7Am\" title=\"美以对伊军事行动加剧分裂，北约面临前所未有“生存危机”\" target=\"_blank\">美以对伊军事行动加剧分裂，北约面临前所未有“生存危机”</a></h2><div class=\"clearfix\"><time class=\"news-stream-newsStream-text\">今天 12:17</time><a class=\"news-stream-newsStream-ly ly\" id=\"count7449311790535544976\" href=\"https://gentie.ifeng.com/view.html?docUrl=ucms_8sHvTViP7Am&amp;docName=美以对伊军事行动加剧分裂，北约面临前所未有“生存危机”&amp;skey=b02bab&amp;pcUrl=https://news.ifeng.com/c/8sHvTViP7Am\" target=\"_blank\">3</a></div></div></li><li class=\"news-stream-newsStream-news-item-has-image clearfix news_item\" data-id=\"7449305551780979655\"><a class=\"news-stream-newsStream-image-link\" href=\"//news.ifeng.com/c/8sHthfpqkYZ\" title=\"美媒披露美伊谈判内幕：特朗普相信伊朗最终会接受他的条件\" target=\"_blank\"><img src=\"//d.ifengimg.com/w144_h80_ablur_q90/x0.ifengimg.com/ucms/2026_16/7A6B936A09CA1D2A048356A8DC9D37030F993B83_size39_w652_h367.jpg\" alt=\"美媒披露美伊谈判内幕：特朗普相信伊朗最终会接受他的条件\" width=\"144\" height=\"80\"></a><div class=\"news-stream-newsStream-news-item-infor\"><h2 class=\"news-stream-newsStream-mr13 news-stream-newsStream-news-item-title news-stream-newsStream-news-item-title-height\"><a href=\"//news.ifeng.com/c/8sHthfpqkYZ\" title=\"美媒披露美伊谈判内幕：特朗普相信伊朗最终会接受他的条件\" target=\"_blank\">美媒披露美伊谈判内幕：特朗普相信伊朗最终会接受他的条件</a></h2><div class=\"clearfix\"><time class=\"news-stream-newsStream-text\">今天 12:16</time><a class=\"news-stream-newsStream-ly ly\" id=\"count7449305551780979655\" href=\"https://gentie.ifeng.com/view.html?docUrl=ucms_8sHthfpqkYZ&amp;docName=美媒披露美伊谈判内幕：特朗普相信伊朗最终会接受他的条件&amp;skey=d580cf&amp;pcUrl=https://news.ifeng.com/c/8sHthfpqkYZ\" target=\"_blank\">10</a></div></div></li><li class=\"news-stream-newsStream-news-item-has-image clearfix news_item\" data-id=\"7449313002701983885\"><a class=\"news-stream-newsStream-image-link\" href=\"//news.ifeng.com/c/8sHvoqqhxc5\" title=\"被绳割喉的男孩，成绩全校前三\" target=\"_blank\"><div class=\"news-stream-newsStream-play\"></div><img src=\"//d.ifengimg.com/w144_h80_ablur_q90/x0.ifengimg.com/ucms/2026_16/264C1F9D6DB12928F7A4449CC468250C69E4F2BF_size855_w975_h549.png\" alt=\"被绳割喉的男孩，成绩全校前三\" width=\"144\" height=\"80\"></a><div class=\"news-stream-newsStream-news-item-infor\"><h2 class=\"news-stream-newsStream-mr13 news-stream-newsStream-news-item-title news-stream-newsStream-news-item-title-height\"><a href=\"//news.ifeng.com/c/8sHvoqqhxc5\" title=\"被绳割喉的男孩，成绩全校前三\" target=\"_blank\">被绳割喉的男孩，成绩全校前三</a></h2><div class=\"clearfix\"><time class=\"news-stream-newsStream-text\">今天 12:03</time><a class=\"news-stream-newsStream-ly ly\" id=\"count7449313002701983885\" href=\"https://gentie.ifeng.com/view.html?docUrl=ucms_8sHvoqqhxc5&amp;docName=被绳割喉的男孩，成绩全校前三&amp;skey=a5a8e4&amp;pcUrl=https://news.ifeng.com/c/8sHvoqqhxc5\" target=\"_blank\">0</a></div></div></li><li class=\"news-stream-newsStream-news-item-ad\"><div p_1040=\"\" c=\"1040\" pp_1040=\"\"><iframe frameborder=\"0\" border=\"0\" scrolling=\"no\" style=\"width: 640px; height: 80px;\"></iframe></div></li><li class=\"news-stream-newsStream-news-item-ad\"><div p_2619=\"\" c=\"2619\" pp_2619=\"\"><iframe frameborder=\"0\" border=\"0\" scrolling=\"no\" style=\"width: 640px; height: 90px;\"></iframe></div></li><li class=\"news-stream-newsStream-news-item-has-image clearfix news_item\" data-id=\"7449306260861620891\"><a class=\"news-stream-newsStream-image-link\" href=\"//news.ifeng.com/c/8sHtu9pQrGd\" title=\"创纪录油储释放还不够，日本考虑追加\" target=\"_blank\"><img src=\"//d.ifengimg.com/w144_h80_ablur_q90/x0.ifengimg.com/ucms/2026_16/5B47E3BC38183B5A68454651D8059B554CE7969C_size36_w599_h337.jpg\" alt=\"创纪录油储释放还不够，日本考虑追加\" width=\"144\" height=\"80\"></a><div class=\"news-stream-newsStream-news-item-infor\"><h2 class=\"news-stream-newsStream-mr13 news-stream-newsStream-news-item-title news-stream-newsStream-news-item-title-height\"><a href=\"//news.ifeng.com/c/8sHtu9pQrGd\" title=\"创纪录油储释放还不够，日本考虑追加\" target=\"_blank\">创纪录油储释放还不够，日本考虑追加</a></h2><div class=\"clearfix\"><time class=\"news-stream-newsStream-text\">今天 12:00</time><a class=\"news-stream-newsStream-ly ly\" id=\"count7449306260861620891\" href=\"https://gentie.ifeng.com/view.html?docUrl=ucms_8sHtu9pQrGd&amp;docName=创纪录油储释放还不够，日本考虑追加&amp;skey=7b1010&amp;pcUrl=https://news.ifeng.com/c/8sHtu9pQrGd\" target=\"_blank\">0</a></div></div></li><li class=\"news-stream-newsStream-news-item-has-image clearfix news_item\" data-id=\"7449301896382124810\"><a class=\"news-stream-newsStream-image-link\" href=\"//news.ifeng.com/c/8sHsfJntg0g\" title=\"伊朗官员删除“美国3个过分要求”的帖文\" target=\"_blank\"><img src=\"//d.ifengimg.com/w144_h80_ablur_q90/x0.ifengimg.com/ucms/2026_16/27704F82FE8C98D429806B35452013E2A788E49F_size151_w975_h549.jpg\" alt=\"伊朗官员删除“美国3个过分要求”的帖文\" width=\"144\" height=\"80\"></a><div class=\"news-stream-newsStream-news-item-infor\"><h2 class=\"news-stream-newsStream-mr13 news-stream-newsStream-news-item-title news-stream-newsStream-news-item-title-height\"><a href=\"//news.ifeng.com/c/8sHsfJntg0g\" title=\"伊朗官员删除“美国3个过分要求”的帖文\" target=\"_blank\">伊朗官员删除“美国3个过分要求”的帖文</a></h2><div class=\"clearfix\"><time class=\"news-stream-newsStream-text\">今天 11:59</time><a class=\"news-stream-newsStream-ly ly\" id=\"count7449301896382124810\" href=\"https://gentie.ifeng.com/view.html?docUrl=ucms_8sHsfJntg0g&amp;docName=伊朗官员删除“美国3个过分要求”的帖文&amp;skey=fe312b&amp;pcUrl=https://news.ifeng.com/c/8sHsfJntg0g\" target=\"_blank\">0</a></div></div></li><li class=\"news-stream-newsStream-news-item-has-image clearfix news_item\" data-id=\"7449301896382124755\"><a class=\"news-stream-newsStream-image-link\" href=\"//news.ifeng.com/c/8sHsfJntfzn\" title=\"西藏自治区党委：坚决拥护党中央决定\" target=\"_blank\"><img src=\"//d.ifengimg.com/w144_h80_ablur_q90/x0.ifengimg.com/ucms/2026_16/8330275FAF8681EAA3C242A87F98C7DFC57F24AF_size44_w887_h499.jpg\" alt=\"西藏自治区党委：坚决拥护党中央决定\" width=\"144\" height=\"80\"></a><div class=\"news-stream-newsStream-news-item-infor\"><h2 class=\"news-stream-newsStream-mr13 news-stream-newsStream-news-item-title news-stream-newsStream-news-item-title-height\"><a href=\"//news.ifeng.com/c/8sHsfJntfzn\" title=\"西藏自治区党委：坚决拥护党中央决定\" target=\"_blank\">西藏自治区党委：坚决拥护党中央决定</a></h2><div class=\"clearfix\"><time class=\"news-stream-newsStream-text\">今天 11:54</time><a class=\"news-stream-newsStream-ly ly\" id=\"count7449301896382124755\" href=\"https://gentie.ifeng.com/view.html?docUrl=ucms_8sHsfJntfzn&amp;docName=西藏自治区党委：坚决拥护党中央决定&amp;skey=44fe2c&amp;pcUrl=https://news.ifeng.com/c/8sHsfJntfzn\" target=\"_blank\">0</a></div></div></li><li class=\"news-stream-newsStream-news-item-ad\"><div p_14576=\"\" c=\"14576\" pp_14576=\"\"><iframe frameborder=\"0\" border=\"0\" scrolling=\"no\" style=\"width: 640px; height: 80px;\"></iframe></div></li><li class=\"news-stream-newsStream-news-item-ad\"><div p_2622=\"\" c=\"2622\" pp_2622=\"\" style=\"position: relative;\"><div class=\"_iel9a4eprb\" style=\"overflow: hidden;\"><iframe id=\"iframeu6907949_0\" name=\"iframeu6907949_0\" src=\"https://pos.baidu.com/gcom?conwid=640&amp;conhei=80&amp;rdid=6907949&amp;dc=3&amp;di=u6907949&amp;s1=3414840594&amp;s2=55098697&amp;dri=0&amp;dis=0&amp;dai=6&amp;ps=2367x327&amp;enu=encoding&amp;exps=110277,110275,110261,110252,110011&amp;ant=0&amp;psi=6044ecfb588d53c4&amp;dcb=___adblockplus_&amp;dtm=HTML_POST&amp;dvi=0.0&amp;dci=-1&amp;dpt=none&amp;tpr=1776056823341&amp;ti=%E8%B5%84%E8%AE%AF_%E5%87%A4%E5%87%B0%E7%BD%91&amp;ari=2&amp;ver=0620&amp;vc=%E7%94%B7%E5%AD%A9%E8%A2%AB%E7%A7%81%E6%8B%B4%E7%BB%B3%E5%AD%90%E5%89%B2%E5%96%89%EF%BC%8C%E5%AE%B6%E5%B1%9E%E5%8F%91%E5%A3%B0&amp;dbv=2&amp;drs=3&amp;pcs=1654x911&amp;pss=1654x4173&amp;cfv=0&amp;cpl=5&amp;chi=1&amp;cce=true&amp;cec=UTF-8&amp;tlm=1776056600&amp;prot=2&amp;rw=911&amp;ltu=https%3A%2F%2Fnews.ifeng.com%2F&amp;ltr=https%3A%2F%2Fwww.ifeng.com%2F&amp;lcr=https%3A%2F%2Fwww.baidu.com%2Flink%3Furl%3D7joH9JD70YNaAj0BXms-AuF5-btGy9hfax-Xtj4pPKi%26wd%3D%26eqid%3D95d8f2ad01c6a00b0000000669dc792b&amp;ecd=1&amp;dft=0&amp;uc=1920x1032&amp;pis=-1x-1&amp;sr=1920x1080&amp;tcn=1776056825&amp;qn=73187e81b80b3838&amp;ft=1\" width=\"640\" height=\"80\" scrolling=\"no\" frameborder=\"0\"></iframe></div><img style=\"display: none;\"></div></li><li class=\"news-stream-newsStream-news-item-has-image clearfix news_item\" data-id=\"7449311790535544840\"><a class=\"news-stream-newsStream-image-link\" href=\"//news.ifeng.com/c/8sHvTViP78a\" title=\"男孩被私拴绳子割喉，家属发声\" target=\"_blank\"><div class=\"news-stream-newsStream-play\"></div><img src=\"//d.ifengimg.com/w144_h80_ablur_q90/x0.ifengimg.com/ucms/2026_16/E23249A5BBB016109BE71017C8EC55FD5320E198_size773_w939_h529.png\" alt=\"男孩被私拴绳子割喉，家属发声\" width=\"144\" height=\"80\"></a><div class=\"news-stream-newsStream-news-item-infor\"><h2 class=\"news-stream-newsStream-mr13 news-stream-newsStream-news-item-title news-stream-newsStream-news-item-title-height\"><a href=\"//news.ifeng.com/c/8sHvTViP78a\" title=\"男孩被私拴绳子割喉，家属发声\" target=\"_blank\">男孩被私拴绳子割喉，家属发声</a></h2><div class=\"clearfix\"><time class=\"news-stream-newsStream-text\">今天 11:41</time><a class=\"news-stream-newsStream-ly ly\" id=\"count7449311790535544840\" href=\"https://gentie.ifeng.com/view.html?docUrl=ucms_8sHvTViP78a&amp;docName=男孩被私拴绳子割喉，家属发声&amp;skey=dd7756&amp;pcUrl=https://news.ifeng.com/c/8sHvTViP78a\" target=\"_blank\">0</a></div></div></li><li class=\"news-stream-newsStream-news-item-has-image clearfix news_item\" data-id=\"7449296765955608975\"><a class=\"news-stream-newsStream-image-link\" href=\"//news.ifeng.com/c/8sHrCziIrF9\" title=\"大陆释出10项惠台政策，蒋万安喊话民进党\" target=\"_blank\"><img src=\"//d.ifengimg.com/w144_h80_ablur_q90/x0.ifengimg.com/ucms/2026_16/788ACE61373050D3E9C5DD4FC23E46833750A1C7_size68_w640_h360.jpg\" alt=\"大陆释出10项惠台政策，蒋万安喊话民进党\" width=\"144\" height=\"80\"></a><div class=\"news-stream-newsStream-news-item-infor\"><h2 class=\"news-stream-newsStream-mr13 news-stream-newsStream-news-item-title news-stream-newsStream-news-item-title-height\"><a href=\"//news.ifeng.com/c/8sHrCziIrF9\" title=\"大陆释出10项惠台政策，蒋万安喊话民进党\" target=\"_blank\">大陆释出10项惠台政策，蒋万安喊话民进党</a></h2><div class=\"clearfix\"><time class=\"news-stream-newsStream-text\">今天 11:32</time><a class=\"news-stream-newsStream-ly ly\" id=\"count7449296765955608975\" href=\"https://gentie.ifeng.com/view.html?docUrl=ucms_8sHrCziIrF9&amp;docName=大陆释出10项惠台政策，蒋万安喊话民进党&amp;skey=d2e7ff&amp;pcUrl=https://news.ifeng.com/c/8sHrCziIrF9\" target=\"_blank\">122</a></div></div></li><li class=\"news-stream-newsStream-news-item-has-image clearfix news_item\" data-id=\"7449296765955608776\"><a class=\"news-stream-newsStream-image-link\" href=\"//news.ifeng.com/c/8sHrCziIrBw\" title=\"特朗普称今晚10点封锁伊朗\" target=\"_blank\"><img src=\"//d.ifengimg.com/w144_h80_ablur_q90/x0.ifengimg.com/ucms/2026_16/F31506EACA3AF78C58DA3D09453B01C7DA511280_size94_w975_h549.jpg\" alt=\"特朗普称今晚10点封锁伊朗\" width=\"144\" height=\"80\"></a><div class=\"news-stream-newsStream-news-item-infor\"><h2 class=\"news-stream-newsStream-mr13 news-stream-newsStream-news-item-title news-stream-newsStream-news-item-title-height\"><a href=\"//news.ifeng.com/c/8sHrCziIrBw\" title=\"特朗普称今晚10点封锁伊朗\" target=\"_blank\">特朗普称今晚10点封锁伊朗</a></h2><div class=\"clearfix\"><span class=\"news-stream-newsStream-mr10 news-stream-newsStream-text\">CCTV国际时讯</span><time class=\"news-stream-newsStream-text\">今天 11:29</time><a class=\"news-stream-newsStream-ly ly\" id=\"count7449296765955608776\" href=\"https://gentie.ifeng.com/view.html?docUrl=ucms_8sHrCziIrBw&amp;docName=特朗普称今晚10点封锁伊朗&amp;skey=562252&amp;pcUrl=https://news.ifeng.com/c/8sHrCziIrBw\" target=\"_blank\">21</a></div></div></li><li class=\"news-stream-newsStream-news-item-ad\"><div p_14577=\"\" c=\"14577\" pp_14577=\"\" style=\"cursor: pointer;\"><div class=\"feedTW-691C4E0C095C13D428B92D41B655A4DE\">                         <a href=\"javascript:;\" class=\"pic-feedTW-691C4E0C095C13D428B92D41B655A4DE\" id=\"imgcontainer-00162767623839103D88BE29F29F5173\" target=\"_self\">                                 <img src=\"https://x0.ifengimg.com/feather/images/72065/2026/03/25/17744523133464483.jpg\" style=\"height: 80px; width: 149px; margin-top: 0px; margin-left: -2.5px;\">                         </a>                         <div class=\"text-feedTW-691C4E0C095C13D428B92D41B655A4DE\">                             <h2>                                 <a href=\"javascript:;\" target=\"_self\">70岁后，规律锻炼还不够！早晚一粒，活力健康满满！</a>                             </h2>                             <div class=\"clear-feedTW-691C4E0C095C13D428B92D41B655A4DE\">             <span style=\"margin-right:10px;color:#999;font-size:12px;display:none;\"></span>             <time style=\"margin-right:10px;color:#999;font-size:12px;display:inline-block;\">今天 11:07</time>             <a style=\"display: block;float: right; margin-right: 10px;padding-left: 27px;*position: relative;\" href=\"javascript:;\" target=\"_self\"></a>             </div>                             <img src=\"https://x0.ifengimg.com/feprod/c//feprod/c/ifengimcp/pic/20210108/3677f2773fd79f12b079_size1_w56_h34.png\" class=\"adlogo-feedTW-691C4E0C095C13D428B92D41B655A4DE\" style=\"opacity: .8;transform: scale(.8);\">                         </div>                                            </div></div></li><li class=\"news-stream-newsStream-news-item-ad\"><div p_2717=\"\" c=\"2717\" pp_2717=\"\" style=\"height: 90px;\"><div style=\"clear:both;position:relative;margin:0 auto;width:640px;height:90px;\"><img src=\"https://x0.ifengimg.com/feprod/c/feprod/c/ifengimcp/pic/20210108/3677f2773fd79f12b079_size1_w56_h34.png\" style=\"width: 28px;height: 17px;overflow: hidden;position: absolute;left: 1px;bottom: 1px;z-index: 2;opacity: .8;transform: scale(.8);pointer-events:none;\"><a target=\"_blank\" href=\"http://ww2.ldslte.cn?customerId=72065&amp;adId=1491009&amp;clickSign=96900230-41cc-4572-80dc-7a3bd812684c&amp;creativeId=3397206&amp;clickid=9690023041cc457280dc7a3bd812684c\" style=\"width:640px;height:90px;display:block;\"><img src=\"https://x0.ifengimg.com/feather/images/72065/2026/03/26/17744897831541595.jpg\" style=\"width:640px;height:90px;border:none;\"></a></div><div class=\"clear\"></div></div></li><li class=\"news-stream-newsStream-news-item-has-image clearfix news_item\" data-id=\"7449291431316825021\"><a class=\"news-stream-newsStream-image-link\" href=\"//news.ifeng.com/c/8sHph4iUAnd\" title=\"欧尔班败选后，匈反对派领袖放话：叛国之人必须承担责任\" target=\"_blank\"><img src=\"//d.ifengimg.com/w144_h80_ablur_q90/x0.ifengimg.com/ucms/2026_16/D2EC52271614E3AA4F20043DB2AFE7DADB74DE1C_size65_w800_h450.jpg\" alt=\"欧尔班败选后，匈反对派领袖放话：叛国之人必须承担责任\" width=\"144\" height=\"80\"></a><div class=\"news-stream-newsStream-news-item-infor\"><h2 class=\"news-stream-newsStream-mr13 news-stream-newsStream-news-item-title news-stream-newsStream-news-item-title-height\"><a href=\"//news.ifeng.com/c/8sHph4iUAnd\" title=\"欧尔班败选后，匈反对派领袖放话：叛国之人必须承担责任\" target=\"_blank\">欧尔班败选后，匈反对派领袖放话：叛国之人必须承担责任</a></h2><div class=\"clearfix\"><time class=\"news-stream-newsStream-text\">今天 11:15</time><a class=\"news-stream-newsStream-ly ly\" id=\"count7449291431316825021\" href=\"https://gentie.ifeng.com/view.html?docUrl=ucms_8sHph4iUAnd&amp;docName=欧尔班败选后，匈反对派领袖放话：叛国之人必须承担责任&amp;skey=8b9277&amp;pcUrl=https://news.ifeng.com/c/8sHph4iUAnd\" target=\"_blank\">7</a></div></div></li><li class=\"news-stream-newsStream-news-item-has-image clearfix news_item\" data-id=\"7449293760669683858\"><a class=\"news-stream-newsStream-image-link\" href=\"//news.ifeng.com/c/8sHqM5JFNuE\" title=\"遭绳子割喉的男孩已转诊北京，母亲哭得看不清手机上的字\" target=\"_blank\"><img src=\"//d.ifengimg.com/w144_h80_ablur_q90/x0.ifengimg.com/ucms/2026_16/0558B21E8F5C6BDD1A438E550683015770B52531_size108_w975_h549.jpg\" alt=\"遭绳子割喉的男孩已转诊北京，母亲哭得看不清手机上的字\" width=\"144\" height=\"80\"></a><div class=\"news-stream-newsStream-news-item-infor\"><h2 class=\"news-stream-newsStream-mr13 news-stream-newsStream-news-item-title news-stream-newsStream-news-item-title-height\"><a href=\"//news.ifeng.com/c/8sHqM5JFNuE\" title=\"遭绳子割喉的男孩已转诊北京，母亲哭得看不清手机上的字\" target=\"_blank\">遭绳子割喉的男孩已转诊北京，母亲哭得看不清手机上的字</a></h2><div class=\"clearfix\"><time class=\"news-stream-newsStream-text\">今天 11:14</time><a class=\"news-stream-newsStream-ly ly\" id=\"count7449293760669683858\" href=\"https://gentie.ifeng.com/view.html?docUrl=ucms_8sHqM5JFNuE&amp;docName=遭绳子割喉的男孩已转诊北京，母亲哭得看不清手机上的字&amp;skey=756260&amp;pcUrl=https://news.ifeng.com/c/8sHqM5JFNuE\" target=\"_blank\">32</a></div></div></li><li class=\"news-stream-newsStream-news-item-has-image clearfix news_item\" data-id=\"7449292758214255169\"><a class=\"news-stream-newsStream-image-link\" href=\"//news.ifeng.com/c/8sHq4R5IZ9d\" title=\"中纪委连打“三虎”\" target=\"_blank\"><img src=\"//d.ifengimg.com/w144_h80_ablur_q90/x0.ifengimg.com/ucms/2026_16/0078512C10B6B27F20CBFBCCA5BB1C2D2857D728_size86_w975_h549.jpg\" alt=\"中纪委连打“三虎”\" width=\"144\" height=\"80\"></a><div class=\"news-stream-newsStream-news-item-infor\"><h2 class=\"news-stream-newsStream-mr13 news-stream-newsStream-news-item-title news-stream-newsStream-news-item-title-height\"><a href=\"//news.ifeng.com/c/8sHq4R5IZ9d\" title=\"中纪委连打“三虎”\" target=\"_blank\">中纪委连打“三虎”</a></h2><div class=\"clearfix\"><time class=\"news-stream-newsStream-text\">今天 11:13</time><a class=\"news-stream-newsStream-ly ly\" id=\"count7449292758214255169\" href=\"https://gentie.ifeng.com/view.html?docUrl=ucms_8sHq4R5IZ9d&amp;docName=中纪委连打“三虎”&amp;skey=263ba8&amp;pcUrl=https://news.ifeng.com/c/8sHq4R5IZ9d\" target=\"_blank\">18</a></div></div></li><li class=\"news-stream-newsStream-news-item-has-image clearfix news_item\" data-id=\"7449309465381184284\"><a class=\"news-stream-newsStream-image-link\" href=\"//news.ifeng.com/c/8sHuoZhmNEC\" title=\"官方通报济南一小酒馆发生坍塌\" target=\"_blank\"><img src=\"//d.ifengimg.com/w144_h80_ablur_q90/x0.ifengimg.com/ucms/2026_16/C500DEBE078EA73626B365B19883929D59FF8DFB_size1023_w975_h549.png\" alt=\"官方通报济南一小酒馆发生坍塌\" width=\"144\" height=\"80\"></a><div class=\"news-stream-newsStream-news-item-infor\"><h2 class=\"news-stream-newsStream-mr13 news-stream-newsStream-news-item-title news-stream-newsStream-news-item-title-height\"><a href=\"//news.ifeng.com/c/8sHuoZhmNEC\" title=\"官方通报济南一小酒馆发生坍塌\" target=\"_blank\">官方通报济南一小酒馆发生坍塌</a></h2><div class=\"clearfix\"><span class=\"news-stream-newsStream-mr10 news-stream-newsStream-text\">天桥区应急管理局</span><time class=\"news-stream-newsStream-text\">今天 11:12</time><a class=\"news-stream-newsStream-ly ly\" id=\"count7449309465381184284\" href=\"https://gentie.ifeng.com/view.html?docUrl=ucms_8sHuoZhmNEC&amp;docName=官方通报济南一小酒馆发生坍塌&amp;skey=5d5875&amp;pcUrl=https://news.ifeng.com/c/8sHuoZhmNEC\" target=\"_blank\">2</a></div></div></li><li class=\"news-stream-newsStream-news-item-has-image clearfix news_item\" data-id=\"7449293760669683817\"><a class=\"news-stream-newsStream-image-link\" href=\"//news.ifeng.com/c/8sHqM5JFNtZ\" title=\"广东惠州仓库火灾致2死，事故调查报告发布\" target=\"_blank\"><img src=\"//d.ifengimg.com/w144_h80_ablur_q90/x0.ifengimg.com/ucms/2026_16/DA65E7EEF89449E6E8CE2196F6661DF5B1766542_size63_w640_h360.jpg\" alt=\"广东惠州仓库火灾致2死，事故调查报告发布\" width=\"144\" height=\"80\"></a><div class=\"news-stream-newsStream-news-item-infor\"><h2 class=\"news-stream-newsStream-mr13 news-stream-newsStream-news-item-title news-stream-newsStream-news-item-title-height\"><a href=\"//news.ifeng.com/c/8sHqM5JFNtZ\" title=\"广东惠州仓库火灾致2死，事故调查报告发布\" target=\"_blank\">广东惠州仓库火灾致2死，事故调查报告发布</a></h2><div class=\"clearfix\"><time class=\"news-stream-newsStream-text\">今天 11:10</time><a class=\"news-stream-newsStream-ly ly\" id=\"count7449293760669683817\" href=\"https://gentie.ifeng.com/view.html?docUrl=ucms_8sHqM5JFNtZ&amp;docName=广东惠州仓库火灾致2死，事故调查报告发布&amp;skey=c8d4a3&amp;pcUrl=https://news.ifeng.com/c/8sHqM5JFNtZ\" target=\"_blank\">0</a></div></div></li><li class=\"news-stream-newsStream-news-item-has-image clearfix news_item\" data-id=\"7449290816398304005\"><a class=\"news-stream-newsStream-image-link\" href=\"//news.ifeng.com/c/8sHpWFVOj25\" title=\"西班牙首相夫妇在北京被偶遇\" target=\"_blank\"><img src=\"//d.ifengimg.com/w144_h80_ablur_q90/x0.ifengimg.com/ucms/2026_16/DE76BF39BEF3B9D06643669BB6AD777E70F86D2F_size156_w960_h540.jpg\" alt=\"西班牙首相夫妇在北京被偶遇\" width=\"144\" height=\"80\"></a><div class=\"news-stream-newsStream-news-item-infor\"><h2 class=\"news-stream-newsStream-mr13 news-stream-newsStream-news-item-title news-stream-newsStream-news-item-title-height\"><a href=\"//news.ifeng.com/c/8sHpWFVOj25\" title=\"西班牙首相夫妇在北京被偶遇\" target=\"_blank\">西班牙首相夫妇在北京被偶遇</a></h2><div class=\"clearfix\"><time class=\"news-stream-newsStream-text\">今天 11:06</time><a class=\"news-stream-newsStream-ly ly\" id=\"count7449290816398304005\" href=\"https://gentie.ifeng.com/view.html?docUrl=ucms_8sHpWFVOj25&amp;docName=西班牙首相夫妇在北京被偶遇&amp;skey=5deab7&amp;pcUrl=https://news.ifeng.com/c/8sHpWFVOj25\" target=\"_blank\">0</a></div></div></li><li class=\"news-stream-newsStream-news-item-has-image clearfix news_item\" data-id=\"7449297552475693132\"><a class=\"news-stream-newsStream-image-link\" href=\"//news.ifeng.com/c/8sHrQqEeyc8\" title=\"以方被曝插手美伊谈判：要求黎巴嫩问题与伊朗问题切割\" target=\"_blank\"><div class=\"news-stream-newsStream-play\"></div><img src=\"//d.ifengimg.com/w144_h80_ablur_q90/x0.ifengimg.com/ucms/2026_16/7DCA78866DC152AE0674BD5569DC5D609CC838CD_size913_w975_h549.png\" alt=\"以方被曝插手美伊谈判：要求黎巴嫩问题与伊朗问题切割\" width=\"144\" height=\"80\"></a><div class=\"news-stream-newsStream-news-item-infor\"><h2 class=\"news-stream-newsStream-mr13 news-stream-newsStream-news-item-title news-stream-newsStream-news-item-title-height\"><a href=\"//news.ifeng.com/c/8sHrQqEeyc8\" title=\"以方被曝插手美伊谈判：要求黎巴嫩问题与伊朗问题切割\" target=\"_blank\">以方被曝插手美伊谈判：要求黎巴嫩问题与伊朗问题切割</a></h2><div class=\"clearfix\"><time class=\"news-stream-newsStream-text\">今天 11:03</time><a class=\"news-stream-newsStream-ly ly\" id=\"count7449297552475693132\" href=\"https://gentie.ifeng.com/view.html?docUrl=ucms_8sHrQqEeyc8&amp;docName=以方被曝插手美伊谈判：要求黎巴嫩问题与伊朗问题切割&amp;skey=3e0333&amp;pcUrl=https://news.ifeng.com/c/8sHrQqEeyc8\" target=\"_blank\">5</a></div></div></li></ul><div class=\"news-stream-newsStream-more-box\"><a class=\"news-stream-basic-more\">查看更多</a></div></div></div>",
+      "parsing_rules": {
+        "task": "extract_news_list",
+        "source_url": "https://news.ifeng.com/",
+        "rules_version": "1.0",
+        "selectors": {
+          "root_container": "div.index_content_RQk8t",
+          "item_list": "div.index_content_RQk8t > div",
+          "item_node": "li.news-stream-newsStream-news-item-has-image",
+          "fields": {
+            "author": {
+              "selector": "div.news-stream-newsStream-news-item-infor .news-stream-newsStream-mr10",
+              "attribute": "text",
+              "required": false,
+              "base_url": "https://news.ifeng.com/",
+              "format": null,
+              "clean": true
+            },
+            "cover": {
+              "selector": "a.news-stream-newsStream-image-link img",
+              "attribute": "src",
+              "required": false,
+              "base_url": "https://news.ifeng.com/",
+              "format": null,
+              "clean": true
+            },
+            "title": {
+              "selector": "h2 a",
+              "attribute": "text",
+              "required": true,
+              "base_url": "https://news.ifeng.com/",
+              "format": null,
+              "clean": true
+            },
+            "mobile_url": {
+              "selector": "div.news-stream-newsStream-news-item-infor a.ly",
+              "attribute": "href",
+              "required": false,
+              "base_url": "https://news.ifeng.com/",
+              "format": null,
+              "clean": true
+            },
+            "url": {
+              "selector": "h2 a",
+              "attribute": "href",
+              "required": true,
+              "base_url": "https://news.ifeng.com/",
+              "format": null,
+              "clean": true
+            },
+            "hot": {
+              "selector": "div.news-stream-newsStream-news-item-infor a.ly",
+              "attribute": "text",
+              "required": false,
+              "base_url": "https://news.ifeng.com/",
+              "format": null,
+              "clean": true
+            },
+            "timestamp": {
+              "selector": "div.news-stream-newsStream-news-item-infor time",
+              "attribute": "text",
+              "required": false,
+              "base_url": "https://news.ifeng.com/",
+              "format": null,
+              "clean": true
+            }
+          }
+        },
+        "notes": "Auto-generated rules for https://news.ifeng.com/ on 2026-04-13",
+        "created_at": "2026-04-13T05:09:50.840230300Z",
+        "success_rate": 1.0,
+        "total_attempts": 0
+      },
+      "field_mapping_rules": null,
+      "created_at": "2026-04-13T05:09:43.766065300Z",
+      "user_id": null,
+      "is_active": true
+    },
+    {
+      "id": "26d01522-8d21-4b2e-8124-7b82b29d4930",
+      "name": "henan100",
+      "title": "henan100",
+      "description": "henan100",
+      "source_type": "web",
+      "url": "https://www.henan100.com/news/",
+      "selector": "<ul class=\"newsList\" id=\"data\">  <li class=\"noPic news-list\"><a href=\"/news/2026/1240567.shtml\" target=\"_blank\"><div class=\"newsListRight\"><h3>国家医保局：推动脑机接口、手术机器人等新技术加速走向临床应用</h3><p>国家医保局医药服务管理司司长黄心宇会上表示，支持大医院应用临床新业务、新技术。聚焦填补诊疗空白、满足患者需求、代表科技前沿的技术创新，在医疗服务价格立项指...</p><h4>2026-04-13 11:41:19</h4></div></a></li> <li class=\"onePic news-list\"><a href=\"/news/2026/1240566.shtml\" target=\"_blank\"><img src=\"https://www.henan100.com/d/file/news/hn/tbgz/20260413/493714e01d303edb51c5eae52ab0990d.png\"><div class=\"newsListRight\"><h3>黄河科技学院主办 2026年动力学与机械工程国际学术研讨会（ISD...</h3><p>4月11日，2026年动力学与机械工程国际学术研讨会（ISDME2026）在我校成功举办。本次会议由黄河科技学院主办，AEIC学术交流中心协办，《应用力学学报》和Princess Sumaya Un...</p><h4>2026-04-13 11:20:15</h4></div></a></li> <li class=\"noPic news-list\"><a href=\"/news/2026/1240565.shtml\" target=\"_blank\"><div class=\"newsListRight\"><h3>国家医保局：因地制宜适当拉开不同等级医疗机构住院报销水平</h3><p>国家医保局医药服务管理司司长黄心宇会上表示，各地医保部门要综合考虑基金的保障能力，群众就医需求、基层服务能力等因素，合理确定基层医疗卫生机构的住院起付线，完善...</p><h4>2026-04-13 11:16:21</h4></div></a></li> <li class=\"noPic news-list\"><a href=\"/news/2026/1240564.shtml\" target=\"_blank\"><div class=\"newsListRight\"><h3>国家烟草专卖局原党组成员、副局长韩占武被“双开”</h3><p>经查，韩占武丧失理想信念，背弃初心使命，违反中央八项规定精神，违规收受礼品、消费卡；违反组织原则，不按规定报告个人有关事项，违规为他人在干部职工录用方面谋取利益并收...</p><h4>2026-04-13 11:15:25</h4></div></a></li> <li class=\"noPic news-list\"><a href=\"/news/2026/1240563.shtml\" target=\"_blank\"><div class=\"newsListRight\"><h3>重庆市政府原党组成员、副市长江敦涛被“双开”</h3><p>经查，江敦涛丧失理想信念，背弃初心使命，政绩观严重偏差，违背高质量发展要求，急功近利、盲目蛮干，履行全面从严治党主体责任不力，对抗组织审查，搞迷信活动；违反中央八项规定...</p><h4>2026-04-13 11:14:43</h4></div></a></li> <li class=\"noPic news-list\"><a href=\"/news/2026/1240562.shtml\" target=\"_blank\"><div class=\"newsListRight\"><h3>湖南省人大常委会原党组书记、副主任乌兰被“双开”</h3><p>经查，乌兰丧失理想信念，背弃初心使命，搞政治投机，结交政治骗子；违反中央八项规定精神，无偿接受他人提供的高档服装和高端医疗服务，接受可能影响公正执行公务的宴请；在干部...</p><h4>2026-04-13 11:04:00</h4></div></a></li> <li class=\"onePic news-list\"><a href=\"/news/2026/1240561.shtml\" target=\"_blank\"><img src=\"https://www.henan100.com/d/file/news/gn/now/20260413/9ae42e030270d74a961faaa0ed99a9e6.png\"><div class=\"newsListRight\"><h3>四川省“十五五”规划纲要全文发布...</h3><p>其中提出，四川省“十五五”时期GDP年均增长5.5%左右，全社会研发经费投入年均增长8%左右，居民人均可支配收入增长与GDP同步。</p><h4>2026-04-13 11:00:10</h4></div></a></li> <li class=\"noPic news-list\"><a href=\"/news/2026/1240560.shtml\" target=\"_blank\"><div class=\"newsListRight\"><h3>国家医保局：年度新增医保基金份额将适当向基层医疗卫生机构倾斜</h3><p>国家医保局医药服务管理司司长黄心宇会上表示，国家医保局将夯实基层医保定点服务体系，及时将符合条件的基层医疗卫生机构纳入医保定点范围，为群众就近就便就医提供坚...</p><h4>2026-04-13 10:59:16</h4></div></a></li> <li class=\"noPic news-list\"><a href=\"/news/2026/1240559.shtml\" target=\"_blank\"><div class=\"newsListRight\"><h3>郑州为高效能社会治理立规矩！《郑州市高效能社会治理网格化服务管理条例》6月1日起施行</h3><p>近年来，随着城市快速发展，公共服务不到位、矛盾纠纷化解不及时、特殊群体关爱不够等问题在一些领域仍然存在。老百姓关心的“急难愁盼”事儿，需要有人管、有法依。同...</p><h4>2026-04-13 10:42:46</h4></div></a></li> <li class=\"noPic news-list\"><a href=\"/news/2026/1240558.shtml\" target=\"_blank\"><div class=\"newsListRight\"><h3>大公国际副总经理霍霄被查</h3><p>大公国际资信评估有限公司副总经理霍霄涉嫌严重违纪违法，目前正接受中国国新控股有限责任公司纪委纪律审查和淮北市濉溪县监察委员会监察调查。</p><h4>2026-04-13 10:41:53</h4></div></a></li> <li class=\"noPic news-list\"><a href=\"/news/2026/1240556.shtml\" target=\"_blank\"><div class=\"newsListRight\"><h3>黄河科技学院牵头起草 《零碳校园创建与评价规范》团体标准正式发布</h3><p>近日，由黄河科技学院组织起草的《零碳校园创建与评价规范》（T/HNEE 012-2026）团体标准，经河南省能效技术协会正式批准发布。该标准于2026年4月10日发布，并将于2026年4...</p><h4>2026-04-13 10:22:16</h4></div></a></li> <li class=\"noPic news-list\"><a href=\"/news/2026/1240555.shtml\" target=\"_blank\"><div class=\"newsListRight\"><h3>中国长安拿下轻骑铃木50％股权</h3><p>交易概况显示，中国兵器装备集团签署分立协议，原由兵装集团持有的济南轻骑铃木摩托车有限公司50%的股权依法作为资产分割至中国长安汽车集团有限公司名下。</p><h4>2026-04-13 10:19:48</h4></div></a></li> <li class=\"onePic news-list\"><a href=\"/news/2026/1240554.shtml\" target=\"_blank\"><img src=\"https://www.henan100.com/d/file/news/hn/hnnews/20260413/530d8ac0556ba8dc6a89b8808921a41d.jpg\"><div class=\"newsListRight\"><h3>河南身份证、护照最快5天办好！...</h3><p>河南公安机关2026年便民利民服务措施公布，在6项便民利民服务措施中，公安部门进一步压缩居民身份证、出入境证件办理时限。其中，身份证办理时间缩短至15个工作日，特殊...</p><h4>2026-04-13 10:06:56</h4></div></a></li> <li class=\"noPic news-list\"><a href=\"/news/2026/1240553.shtml\" target=\"_blank\"><div class=\"newsListRight\"><h3>郑州市人大常委会原副主任宋书杰被查</h3><p>郑州市人大常委会原副主任宋书杰涉嫌严重违纪违法，目前正接受河南省纪委监委纪律审查和监察调查。</p><h4>2026-04-13 10:02:36</h4></div></a></li> <li class=\"noPic news-list\"><a href=\"/news/2026/1240552.shtml\" target=\"_blank\"><div class=\"newsListRight\"><h3>伊朗最高领袖军事顾问：伊朗不会“被帖文和幻想方案封锁”</h3><p>伊朗最高领袖军事顾问穆赫辛·雷扎伊12日表示，伊朗“不是一个能够被（社交媒体）帖文和幻想方案封锁的地方”。雷扎伊在社交媒体上发文说，美国在霍尔木兹海峡遭受“历史...</p><h4>2026-04-13 09:55:29</h4></div></a></li> <li class=\"noPic news-list\"><a href=\"/news/2026/1240551.shtml\" target=\"_blank\"><div class=\"newsListRight\"><h3>辽宁省交通建设投资集团原党委书记、董事长徐大庆被查</h3><p>辽宁省交通建设投资集团有限责任公司原党委书记、董事长徐大庆涉嫌严重违纪违法，目前正接受辽宁省纪委监委纪律审查和监察调查。</p><h4>2026-04-13 09:44:50</h4></div></a></li> <li class=\"onePic news-list\"><a href=\"/news/2026/1240550.shtml\" target=\"_blank\"><img src=\"https://www.henan100.com/d/file/news/gj/eye/20260413/a5e0045c3f1483219bef52d332af3861.jpg\"><div class=\"newsListRight\"><h3>公开征集线索，最高奖励20万！...</h3><p>4月13日，据国家医保局，为深化医保基金管理突出问题整治，充分调动广大人民群众参与医保基金监管的积极性、主动性，全国各地医保部门近日陆续发布公告，面向全社会公开征...</p><h4>2026-04-13 09:42:36</h4></div></a></li> <li class=\"noPic news-list\"><a href=\"/news/2026/1240549.shtml\" target=\"_blank\"><div class=\"newsListRight\"><h3>特朗普考虑恢复对伊朗有限军事打击</h3><p>据美国《华尔街日报》12日报道，在美国和伊朗谈判未能达成协议后，美国总统特朗普正考虑在封锁霍尔木兹海峡的同时恢复对伊朗的有限军事打击。报道说，美军对伊朗进行全...</p><h4>2026-04-13 09:41:52</h4></div></a></li> <li class=\"noPic news-list\"><a href=\"/news/2026/1240548.shtml\" target=\"_blank\"><div class=\"newsListRight\"><h3>央行开展5亿元7天期逆回购操作</h3><p>4月13日，央行公告称，开展5亿元7天逆回购操作，投标量5亿元，中标量5亿元，操作利率为1.40%，与此前持平。今日无逆回购到期。</p><h4>2026-04-13 09:40:04</h4></div></a></li>  \t\t\t</ul>",
+      "parsing_rules": {
+        "task": "extract_news_list",
+        "source_url": "https://www.henan100.com/news/",
+        "rules_version": "1.0",
+        "selectors": {
+          "root_container": "ul.newsList",
+          "item_list": "ul.newsList",
+          "item_node": "li.news-list",
+          "fields": {
+            "desc": {
+              "selector": "p",
+              "attribute": "text",
+              "required": false,
+              "base_url": "https://www.henan100.com/news/",
+              "format": null,
+              "clean": true
+            },
+            "url": {
+              "selector": "a",
+              "attribute": "href",
+              "required": true,
+              "base_url": "https://www.henan100.com/news/",
+              "format": null,
+              "clean": true
+            },
+            "title": {
+              "selector": "h3",
+              "attribute": "text",
+              "required": true,
+              "base_url": "https://www.henan100.com/news/",
+              "format": null,
+              "clean": true
+            },
+            "timestamp": {
+              "selector": "h4",
+              "attribute": "text",
+              "required": false,
+              "base_url": "https://www.henan100.com/news/",
+              "format": null,
+              "clean": true
+            },
+            "cover": {
+              "selector": "img",
+              "attribute": "src",
+              "required": false,
+              "base_url": "https://www.henan100.com/news/",
+              "format": null,
+              "clean": true
+            }
+          }
+        },
+        "notes": "Auto-generated rules for https://www.henan100.com/news/ on 2026-04-13",
+        "created_at": "2026-04-13T06:09:04.413905400Z",
+        "success_rate": 1.0,
+        "total_attempts": 0
+      },
+      "field_mapping_rules": null,
+      "created_at": "2026-04-13T06:08:59.723160600Z",
+      "user_id": null,
+      "is_active": true
+    }
+  ]
+}
