@@ -1,8 +1,13 @@
 /// <reference types="vite/client" />
 
+declare module '*.vue' {
+  import type { DefineComponent } from 'vue'
+  const component: DefineComponent<{}, {}, any>
+  export default component
+}
+
 interface ImportMetaEnv {
   readonly VITE_API_BASE_URL?: string
-  // 这里可以添加更多的环境变量类型定义
 }
 
 interface ImportMeta {

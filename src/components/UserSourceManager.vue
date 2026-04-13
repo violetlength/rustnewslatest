@@ -328,7 +328,7 @@ const formatDate = (dateString: string) => {
 }
 
 // Handle AI configuration saved
-const handleAIConfigSaved = (config: any) => {
+const handleAIConfigSaved = () => {
   ElMessage.success('AI configuration saved successfully')
   showAIConfig.value = false
 }
