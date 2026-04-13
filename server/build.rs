@@ -8,8 +8,8 @@ fn main() {
         let mut res = winres::WindowsResource::new();
         
         // 设置图标
-        res.set_icon("config/icon.ico");
-        println!("✅ 设置图标: config/icon.ico");
+        res.set_icon("icon.ico");
+        println!("✅ 设置图标: icon.ico");
         
         // 编译资源
         res.compile().expect("无法编译Windows资源");

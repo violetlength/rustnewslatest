@@ -95,9 +95,9 @@ RUN useradd -r -u 1000 -g root appuser
 # 8. 复制编译产物
 COPY --from=builder /app/target/release/newslatest-server /usr/local/bin/
 
-COPY config/config.toml ./config/config.toml
+COPY config.toml ./config.toml
 
-COPY config/icon.ico ./config/icon.ico
+COPY icon.ico ./icon.ico
 
 # 9. 授权并切换用户
 RUN chown -R appuser:root /app
