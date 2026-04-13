@@ -59,7 +59,7 @@ RUN apt-get update && \
 
 # 2. 缓存 Rust 依赖
 # 复制 Cargo 文件
-COPY Cargo.toml Cargo.lock ./
+COPY Cargo.toml ./
 # 创建一个虚拟的 main.rs 来触发依赖下载和编译
 RUN mkdir src && echo "fn main() {}" > src/main.rs
 # 设置 CARGO_HOME 环境变量，确保依赖被缓存在 /app/cargo-cache
