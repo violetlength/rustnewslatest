@@ -260,13 +260,13 @@ Generate a JSON object based on your diagnosis. Infer field names from the conte
 ### TARGET DATA STRUCTURE
 Your generated rules MUST map to these exact fields (to fit the Rust struct):
 - title: (String, REQUIRED) The news headline.
-- url: (String, REQUIRED) The absolute link to the article.
+- url: (String, REQUIRED) The link to the article. Can be relative (e.g., "/path", "//example.com/path") - system will auto-resolve.
 - desc: (Option<String>) A short summary or description.
-- cover: (Option<String>) Image URL.
+- cover: (Option<String>) Image URL. Can be relative - system will auto-resolve.
 - author: (Option<String>) The writer or source name.
 - timestamp: (Option<String>) Publish time.
 - hot: (Option<String>) Popularity score (e.g., "100 points", "10k views").
-- mobile_url: (Option<String>) Mobile redirect link.
+- mobile_url: (Option<String>) Mobile redirect link. Can be relative - system will auto-resolve.
 
 ### INPUT
 URL: {url}
@@ -284,6 +284,13 @@ HTML: {truncated_html}
    - If the data does NOT exist, set that field to null.
 4. Do NOT invent new field names. Only use the 8 fields listed above.
 
+### URL HANDLING
+The system automatically resolves relative URLs. Examples:
+- "/article/123" → "https://example.com/article/123"
+- "//cdn.example.com/img.jpg" → "https://cdn.example.com/img.jpg"
+- "page.html" → "https://example.com/path/page.html"
+You do NOT need to include base_url in your output. Just extract the raw href/src values.
+
 ### OUTPUT FORMAT
 Return ONLY a JSON object in this exact format:
 {target_schema_example}
@@ -293,7 +300,6 @@ Return ONLY a JSON object in this exact format:
 - Do not wrap the JSON in ```json code blocks.
 - Do not add any text before or after the JSON.
 - All selectors must be valid CSS selectors.
-- For relative URLs, do NOT include base_url field (it will be handled automatically).
 "#,
             url = url,
             content_type = content_type,

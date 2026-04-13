@@ -374,18 +374,8 @@ impl WebScraper {
                     
                     // Handle URL formatting for links
                     if field_name == "url" || field_name == "link" {
-                        let final_value = if let Some(base_url) = &field_rule.base_url {
-                            if value.starts_with('/') {
-                                format!("{}{}", base_url.trim_end_matches('/'), value)
-                            } else if !value.starts_with("http") {
-                                format!("{}/{}", base_url.trim_end_matches('/'), value)
-                            } else {
-                                value
-                            }
-                        } else {
-                            value
-                        };
-                        
+                        let base_url = field_rule.base_url.as_deref().unwrap_or(&rules.source_url);
+                        let final_value = self.resolve_url(&value, base_url);
                         news_item.url = final_value;
                     } else if field_name == "title" {
                         news_item.title = value;
@@ -408,17 +398,8 @@ impl WebScraper {
                         news_item.timestamp = Some(formatted_time);
                     } else if field_name == "cover" || field_name == "image" {
                         // Handle image URLs - resolve relative URLs
-                        let final_url = if let Some(base_url) = &field_rule.base_url {
-                            if value.starts_with('/') {
-                                format!("{}{}", base_url.trim_end_matches('/'), value)
-                            } else if !value.starts_with("http") {
-                                format!("{}/{}", base_url.trim_end_matches('/'), value)
-                            } else {
-                                value
-                            }
-                        } else {
-                            value
-                        };
+                        let base_url = field_rule.base_url.as_deref().unwrap_or(&rules.source_url);
+                        let final_url = self.resolve_url(&value, base_url);
                         news_item.cover = Some(final_url);
                     } else if field_name == "author" {
                         news_item.author = Some(value);
@@ -428,17 +409,8 @@ impl WebScraper {
                         news_item.hot = hot_value;
                     } else if field_name == "mobile_url" {
                         // Handle mobile URLs - resolve relative URLs
-                        let final_url = if let Some(base_url) = &field_rule.base_url {
-                            if value.starts_with('/') {
-                                format!("{}{}", base_url.trim_end_matches('/'), value)
-                            } else if !value.starts_with("http") {
-                                format!("{}/{}", base_url.trim_end_matches('/'), value)
-                            } else {
-                                value
-                            }
-                        } else {
-                            value
-                        };
+                        let base_url = field_rule.base_url.as_deref().unwrap_or(&rules.source_url);
+                        let final_url = self.resolve_url(&value, base_url);
                         news_item.mobile_url = Some(final_url);
                     }
                 } else if field_rule.required {
@@ -463,5 +435,31 @@ impl WebScraper {
         
         info!("Parsed {} news items using structured rules", news_items.len());
         Ok(news_items)
+    }
+
+    fn resolve_url(&self, url: &str, base_url: &str) -> String {
+        if url.starts_with("http://") || url.starts_with("https://") {
+            url.to_string()
+        } else if url.starts_with("//") {
+            if base_url.starts_with("https://") {
+                format!("https:{}", url)
+            } else {
+                format!("http:{}", url)
+            }
+        } else if url.starts_with('/') {
+            if let Ok(base) = url::Url::parse(base_url) {
+                format!("{}://{}{}", base.scheme(), base.host_str().unwrap_or(""), url)
+            } else {
+                format!("{}{}", base_url.trim_end_matches('/'), url)
+            }
+        } else if url.is_empty() {
+            String::new()
+        } else {
+            if let Some(last_slash) = base_url.rfind('/') {
+                format!("{}{}", &base_url[..last_slash + 1], url)
+            } else {
+                format!("{}/{}", base_url, url)
+            }
+        }
     }
 }
