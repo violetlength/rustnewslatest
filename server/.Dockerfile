@@ -103,12 +103,7 @@ COPY config/icon.ico ./config/icon.ico
 RUN chown -R appuser:root /app
 USER appuser
 
-# EXPOSE 8080
+EXPOSE 8080
 
-# CMD ["/usr/local/bin/newslatest-server"]
+CMD ["/usr/local/bin/newslatest-server"]
 
-# 在运行阶段添加
-ENV PORT=8080  # 默认值，会被 Railway 覆盖
-
-# 修改 CMD，通过环境变量传递
-CMD ["sh", "-c", "/usr/local/bin/newslatest-server --port $PORT"]
