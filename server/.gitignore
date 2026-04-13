@@ -63,8 +63,6 @@ docs/build/
 # Rust analyzer
 .rust-analyzer/
 
-# Cargo
-Cargo.lock
 
 # Debug builds
 debug/
