@@ -92,3 +92,7 @@ coverage/
 # Temporary build artifacts
 build/
 dist/
+
+config/ai_config.json
+
+data/user_sources.json
