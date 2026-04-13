@@ -16,12 +16,53 @@ pub struct CurrentAIConfig {
     pub enabled: bool,
 }
 
+impl Default for AIConfig {
+    fn default() -> Self {
+        Self {
+            current_config: CurrentAIConfig {
+                provider: "deepseek".to_string(),
+                api_key: String::new(),
+                model: "deepseek-chat".to_string(),
+                api_base: None,
+                enabled: false,
+            }
+        }
+    }
+}
+
 impl AIConfig {
     pub async fn load() -> Result<Self> {
         let config_path = "config/ai_config.json";
+        
+        // 检查配置文件是否存在
+        if !std::path::Path::new(config_path).exists() {
+            // 创建 config 目录
+            if let Some(parent) = std::path::Path::new(config_path).parent() {
+                fs::create_dir_all(parent)?;
+            }
+            // 创建默认配置文件
+            let default_config = Self::default();
+            let content = serde_json::to_string_pretty(&default_config)?;
+            fs::write(config_path, content)?;
+            return Ok(default_config);
+        }
+        
         let content = fs::read_to_string(config_path)?;
         let config: AIConfig = serde_json::from_str(&content)?;
         Ok(config)
+    }
+    
+    pub fn save(&self) -> Result<()> {
+        let config_path = "config/ai_config.json";
+        
+        // 确保 config 目录存在
+        if let Some(parent) = std::path::Path::new(config_path).parent() {
+            fs::create_dir_all(parent)?;
+        }
+        
+        let content = serde_json::to_string_pretty(self)?;
+        fs::write(config_path, content)?;
+        Ok(())
     }
 }
 

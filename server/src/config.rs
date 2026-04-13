@@ -18,12 +18,12 @@ impl Config {
     pub fn load() -> anyhow::Result<Self> {
         // 尝试多个可能的配置文件位置
         let current_dir = std::env::current_dir()?;
-        let config_path_absolute = current_dir.join("config.toml");
+        let config_path_absolute = current_dir.join("config/config.toml");
         let config_paths = [
-            "config.toml",                           // 当前目录
-            "../config.toml",                         // 上级目录
-            "../../config.toml",                     // 上上级目录
-            config_path_absolute.to_str().unwrap_or("config.toml"), // 绝对路径
+            "config/config.toml",                           // config 目录
+            "../config/config.toml",                         // 上级目录的 config 目录
+            "../../config/config.toml",                     // 上上级目录的 config 目录
+            config_path_absolute.to_str().unwrap_or("config/config.toml"), // 绝对路径
         ];
         
         for config_path in &config_paths {

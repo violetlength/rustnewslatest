@@ -160,6 +160,14 @@ async fn update_ai_config(
     
     // Save the updated configuration
     let config_path = "config/ai_config.json";
+    
+    // 确保 config 目录存在
+    if let Some(parent) = std::path::Path::new(config_path).parent() {
+        if let Err(e) = std::fs::create_dir_all(parent) {
+            return Json(ApiResponse::error(format!("Failed to create config directory: {}", e)));
+        }
+    }
+    
     let content = match serde_json::to_string_pretty(&wrapped_config) {
         Ok(content) => content,
         Err(e) => return Json(ApiResponse::error(format!("Failed to serialize config: {}", e))),
@@ -1179,7 +1187,7 @@ async fn index() -> impl IntoResponse {
 // 图标服务
 async fn serve_icon() -> impl IntoResponse {
     // 尝试读取图标文件
-    match tokio::fs::read("icon.ico").await {
+    match tokio::fs::read("config/icon.ico").await {
         Ok(icon_data) => {
             (StatusCode::OK, [(header::CONTENT_TYPE, "image/x-icon")], icon_data)
         }
@@ -1362,6 +1370,16 @@ async fn main() -> anyhow::Result<()> {
         .init();
 
     info!("📰 启动 NewsLatest 服务器...");
+
+    // 确保配置目录存在
+    if let Err(e) = std::fs::create_dir_all("config") {
+        warn!("⚠️ 创建 config 目录失败: {}，将使用默认配置", e);
+    }
+    
+    // 确保数据目录存在
+    if let Err(e) = std::fs::create_dir_all("data") {
+        warn!("⚠️ 创建 data 目录失败: {}，用户数据源可能无法保存", e);
+    }
 
     // 创建应用状态
     let config = match config::Config::load() {

@@ -1063,7 +1063,7 @@ Please output the converted JSON array:"#,
 
     async fn call_ai_provider(&self, prompt: &str) -> Result<String> {
         match self.config.current_config.provider.as_str() {
-            "openai" | "deepseek" | "moonshot" | "qwen" | "baichuan" | "doubao" => {
+            "openai" | "deepseek" | "moonshot" | "qwen" | "baichuan" | "doubao" | "minimax" | "spark" | "lingdou" | "stepfun" => {
                 self.call_openai_compatible(prompt).await
             }
             "anthropic" => {
@@ -1209,7 +1209,7 @@ Please output the converted JSON array:"#,
 
     pub async fn test_connection(&self, test_prompt: &str) -> Result<String> {
         match self.config.current_config.provider.to_lowercase().as_str() {
-            "openai" | "deepseek" | "moonshot" | "qwen" | "baichuan" | "doubao" => {
+            "openai" | "deepseek" | "moonshot" | "qwen" | "baichuan" | "doubao" | "minimax" | "spark" | "lingdou" | "stepfun" => {
                 self.call_openai_compatible(test_prompt).await
             }
             "anthropic" => {

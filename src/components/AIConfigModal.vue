@@ -2,28 +2,32 @@
   <div class="modal-overlay" @click="closeModal">
     <div class="modal-content" @click.stop>
       <div class="modal-header">
-        <h2>AI configuration</h2>
+        <h2>AI 配置</h2>
         <button class="close-btn" @click="closeModal">×</button>
       </div>
       
       <div class="modal-body">
         <div class="form-group">
-          <label for="provider">AI provider</label>
+          <label for="provider">AI 提供商</label>
           <select id="provider" v-model="config.provider" @change="updateModelOptions">
-            <option value="">Select a provider</option>
-            <optgroup label="International">
+            <option value="">选择提供商</option>
+            <optgroup label="国际模型">
               <option value="openai">OpenAI</option>
               <option value="anthropic">Anthropic Claude</option>
               <option value="azure">Azure OpenAI</option>
             </optgroup>
-            <optgroup label="Chinese AI Models">
+            <optgroup label="国内模型">
               <option value="deepseek">DeepSeek</option>
               <option value="moonshot">Moonshot AI (Kimi)</option>
               <option value="zhipuai">Zhipu AI (GLM)</option>
-              <option value="qwen">Alibaba Qwen</option>
-              <option value="baichuan">Baichuan AI</option>
-              <option value="doubao">Volcengine Doubao</option>
-              <option value="baidu">Baidu ERNIE</option>
+              <option value="qwen">阿里通义千问</option>
+              <option value="baichuan">百川AI</option>
+              <option value="doubao">火山引擎豆包</option>
+              <option value="baidu">百度文心一言</option>
+              <option value="minimax">MiniMax</option>
+              <option value="spark">讯飞星火</option>
+              <option value="lingdou">灵犀AI</option>
+              <option value="stepfun">阶跃星辰</option>
             </optgroup>
           </select>
           <div v-if="config.provider" class="provider-info">
@@ -34,17 +38,17 @@
         </div>
         
         <div class="form-group">
-          <label for="api_key">API Key</label>
+          <label for="api_key">API 密钥</label>
           <input 
             id="api_key"
             v-model="config.api_key"
             type="password"
-            placeholder="Enter your API key"
+            placeholder="请输入您的 API 密钥"
             autocomplete="off"
           />
         </div>
         
-        <div class="form-group" v-if="config.provider && ['azure', 'deepseek', 'moonshot', 'zhipuai', 'qwen', 'baichuan', 'doubao', 'baidu'].includes(config.provider)">
+        <div class="form-group" v-if="config.provider && ['azure', 'deepseek', 'moonshot', 'zhipuai', 'qwen', 'baichuan', 'doubao', 'baidu', 'minimax', 'spark', 'lingdou', 'stepfun'].includes(config.provider)">
           <label for="api_base">API Base URL</label>
           <input 
             id="api_base"
@@ -58,9 +62,9 @@
         </div>
         
         <div class="form-group">
-          <label for="model">Model</label>
+          <label for="model">模型</label>
           <select id="model" v-model="config.model">
-            <option value="">Select a model</option>
+            <option value="">选择模型</option>
             <option v-for="model in availableModels" :key="model" :value="model">
               {{ model }}
             </option>
@@ -73,10 +77,10 @@
               type="checkbox"
               v-model="config.enabled"
             />
-            Enable AI parsing
+            启用 AI 解析
           </label>
           <small class="help-text">
-            When enabled, AI will be used to parse web content for better accuracy
+            启用后，将使用 AI 来解析网页内容以提高准确性
           </small>
         </div>
         
@@ -86,7 +90,7 @@
             @click="testConnection"
             :disabled="testing"
           >
-            {{ testing ? 'Testing...' : 'Test Connection' }}
+            {{ testing ? '测试中...' : '测试连接' }}
           </button>
           <div v-if="testResult" class="test-result" :class="{ success: testResult.success, error: !testResult.success }">
             {{ testResult.message }}
@@ -95,9 +99,9 @@
       </div>
       
       <div class="modal-footer">
-        <button class="btn-cancel" @click="closeModal">Cancel</button>
+        <button class="btn-cancel" @click="closeModal">取消</button>
         <button class="btn-save" @click="saveConfig" :disabled="!isValid">
-          Save Configuration
+          保存配置
         </button>
       </div>
     </div>
@@ -123,19 +127,21 @@ const testing = ref(false)
 const testResult = ref(null)
 
 const providerModels = {
-  // International models
   openai: ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo'],
   anthropic: ['claude-3-haiku-20240307', 'claude-3-sonnet-20240229', 'claude-3-opus-20240229'],
   azure: ['gpt-35-turbo', 'gpt-4', 'gpt-4-32k'],
   
-  // Chinese AI models
   deepseek: ['deepseek-chat', 'deepseek-coder'],
   moonshot: ['moonshot-v1-8k', 'moonshot-v1-32k', 'moonshot-v1-128k'],
   zhipuai: ['glm-4', 'glm-4-0520', 'glm-4-air', 'glm-4-flash', 'glm-3-turbo'],
   qwen: ['qwen-turbo', 'qwen-plus', 'qwen-max', 'qwen2-72b-instruct', 'qwen2-57b-llm'],
   baichuan: ['Baichuan2-Turbo', 'Baichuan2-Turbo-192k', 'Baichuan-Text-Embedding'],
   doubao: ['doubao-lite-4k', 'doubao-lite-32k', 'doubao-lite-128k', 'doubao-pro-4k', 'doubao-pro-32k', 'doubao-pro-128k'],
-  baidu: ['ernie-3.5-8k', 'ernie-4.0-8k', 'ernie-turbo-8k', 'ernie-speed-8k', 'ernie-lite-8k']
+  baidu: ['ernie-3.5-8k', 'ernie-4.0-8k', 'ernie-turbo-8k', 'ernie-speed-8k', 'ernie-lite-8k'],
+  minimax: ['abab6-chat', 'abab6.5s-chat', 'abab6.5g-chat'],
+  spark: ['spark-3.5', 'spark-4.0', 'spark-3.0', 'spark-2.0'],
+  lingdou: ['lingdou-plus', 'lingdou'],
+  stepfun: ['step-1v-8k', 'step-1v-32k', 'step-1-8k', 'step-1-32k', 'step-1-128k']
 }
 
 const availableModels = computed(() => {
@@ -151,7 +157,6 @@ const isValid = computed(() => {
 const updateModelOptions = () => {
   config.value.model = ''
   
-  // Set default API base URLs for different providers
   const apiBaseUrls = {
     'azure': 'https://your-resource.openai.azure.com',
     'deepseek': 'https://api.deepseek.com/v1',
@@ -160,7 +165,11 @@ const updateModelOptions = () => {
     'qwen': 'https://dashscope.aliyuncs.com/compatible-mode/v1',
     'baichuan': 'https://api.baichuan-ai.com/v1',
     'doubao': 'https://ark.cn-beijing.volces.com/api/v3',
-    'baidu': 'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop'
+    'baidu': 'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop',
+    'minimax': 'https://api.minimax.chat/v1',
+    'spark': 'https://spark-api.xf-yun.com',
+    'lingdou': 'https://api.lingdouai.com/v1',
+    'stepfun': 'https://api.stepfun.com/v1'
   }
   
   config.value.api_base = apiBaseUrls[config.value.provider] || ''
@@ -173,7 +182,7 @@ const loadConfig = async () => {
       config.value = { ...config.value, ...response.data.current_config }
     }
   } catch (error) {
-    console.error('Failed to load AI config:', error)
+    console.error('加载 AI 配置失败:', error)
   }
 }
 
@@ -185,8 +194,8 @@ const saveConfig = async () => {
       closeModal()
     }
   } catch (error) {
-    console.error('Failed to save AI config:', error)
-    alert('Failed to save configuration: ' + error.message)
+    console.error('保存 AI 配置失败:', error)
+    alert('保存配置失败: ' + error.message)
   }
 }
 
@@ -195,28 +204,26 @@ const testConnection = async () => {
   testResult.value = null
   
   try {
-    // Save config temporarily for testing
     const testConfig = { ...config.value }
     await api.post('/api/ai-config', testConfig)
     
-    // Test actual AI connection
     const testResponse = await api.post('/api/ai-test')
     
     if (testResponse.success) {
       testResult.value = {
         success: true,
-        message: `AI connection successful! Provider: ${testResponse.data.provider}, Model: ${testResponse.data.model}. Response: ${testResponse.data.response}`
+        message: `AI 连接成功！提供商: ${testResponse.data.provider}, 模型: ${testResponse.data.model}。响应: ${testResponse.data.response}`
       }
     } else {
       testResult.value = {
         success: false,
-        message: 'AI connection test failed: ' + (testResponse.message || testResponse.error || 'Unknown error')
+        message: 'AI 连接测试失败: ' + (testResponse.message || testResponse.error || '未知错误')
       }
     }
   } catch (error) {
     testResult.value = {
       success: false,
-      message: 'Connection failed: ' + error.message
+      message: '连接失败: ' + error.message
     }
   } finally {
     testing.value = false
@@ -232,21 +239,29 @@ const getApiBasePlaceholder = () => {
     'qwen': 'https://dashscope.aliyuncs.com/compatible-mode/v1',
     'baichuan': 'https://api.baichuan-ai.com/v1',
     'doubao': 'https://ark.cn-beijing.volces.com/api/v3',
-    'baidu': 'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop'
+    'baidu': 'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop',
+    'minimax': 'https://api.minimax.chat/v1',
+    'spark': 'https://spark-api.xf-yun.com',
+    'lingdou': 'https://api.lingdouai.com/v1',
+    'stepfun': 'https://api.stepfun.com/v1'
   }
   return placeholders[config.value.provider] || 'Enter API base URL'
 }
 
 const getApiBaseHelp = () => {
   const helpText = {
-    'azure': 'Azure OpenAI endpoint URL',
-    'deepseek': 'DeepSeek API endpoint',
-    'moonshot': 'Moonshot AI API endpoint',
-    'zhipuai': 'Zhipu AI API endpoint',
-    'qwen': 'Qwen DashScope API endpoint',
-    'baichuan': 'Baichuan AI API endpoint',
-    'doubao': 'Volcengine Doubao API endpoint',
-    'baidu': 'Baidu ERNIE API endpoint'
+    'azure': 'Azure OpenAI 端点 URL',
+    'deepseek': 'DeepSeek API 端点',
+    'moonshot': 'Moonshot AI API 端点',
+    'zhipuai': 'Zhipu AI API 端点',
+    'qwen': '通义千问 DashScope API 端点',
+    'baichuan': '百川AI API 端点',
+    'doubao': '火山引擎豆包 API 端点',
+    'baidu': '百度文心一言 API 端点',
+    'minimax': 'MiniMax API 端点',
+    'spark': '讯飞星火 API 端点',
+    'lingdou': '灵犀AI API 端点',
+    'stepfun': '阶跃星辰 API 端点'
   }
   return helpText[config.value.provider] || ''
 }
@@ -259,28 +274,36 @@ const getProviderName = (provider) => {
     'deepseek': 'DeepSeek',
     'moonshot': 'Moonshot AI (Kimi)',
     'zhipuai': 'Zhipu AI (GLM)',
-    'qwen': 'Alibaba Qwen',
-    'baichuan': 'Baichuan AI',
-    'doubao': 'Volcengine Doubao',
-    'baidu': 'Baidu ERNIE'
+    'qwen': '阿里通义千问',
+    'baichuan': '百川AI',
+    'doubao': '火山引擎豆包',
+    'baidu': '百度文心一言',
+    'minimax': 'MiniMax',
+    'spark': '讯飞星火',
+    'lingdou': '灵犀AI',
+    'stepfun': '阶跃星辰'
   }
   return names[provider] || provider
 }
 
 const getProviderDescription = (provider) => {
   const descriptions = {
-    'openai': 'Powerful language models with excellent reasoning capabilities',
-    'anthropic': 'Constitutional AI with strong safety features',
-    'azure': 'Enterprise-grade OpenAI with Microsoft Azure integration',
-    'deepseek': 'Advanced reasoning and code generation, cost-effective',
-    'moonshot': 'Long context window (128K) and multilingual support',
-    'zhipuai': 'GLM-4 series with strong Chinese language understanding',
-    'qwen': 'Enterprise-ready models with robust performance',
-    'baichuan': 'Long context (192K) and efficient processing',
-    'doubao': 'Lightweight and cost-effective models',
-    'baidu': 'Chinese-optimized models with strong cultural understanding'
+    'openai': '强大的语言模型，具有出色的推理能力',
+    'anthropic': '基于宪法AI，安全性强',
+    'azure': '企业级OpenAI，与Microsoft Azure集成',
+    'deepseek': '先进的推理和代码生成能力，成本效益高',
+    'moonshot': '长上下文窗口 (128K) 和多语言支持',
+    'zhipuai': 'GLM-4系列，强化的中文理解能力',
+    'qwen': '企业级模型，性能稳健可靠',
+    'baichuan': '长上下文 (192K) 和高效处理能力',
+    'doubao': '轻量级模型，成本效益高',
+    'baidu': '中文优化模型，对中国文化有深刻理解',
+    'minimax': '海螺AI，短视频和内容创作能力强',
+    'spark': '讯飞认知大模型，语音交互能力强',
+    'lingdou': '新兴AI品牌，专注对话交互',
+    'stepfun': '阶跃星辰大模型，多模态能力强'
   }
-  return descriptions[provider] || 'AI language model provider'
+  return descriptions[provider] || 'AI语言模型提供商'
 }
 
 const closeModal = () => {
