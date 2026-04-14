@@ -15,6 +15,7 @@ RUN rm -rf src
 COPY src ./src
 COPY config.toml ./config.toml
 COPY icon.ico ./icon.ico
+COPY config ./config
 RUN cargo build --release
 
 # 运行阶段
@@ -29,6 +30,7 @@ RUN apt-get update && \
 COPY --from=builder /app/target/release/newslatest-server /usr/local/bin/
 COPY --from=builder /app/config.toml ./config.toml
 COPY --from=builder /app/icon.ico ./icon.ico
+COPY --from=builder /app/config ./config
 
 EXPOSE 8080
 
