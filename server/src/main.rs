@@ -1451,10 +1451,7 @@ async fn main() -> anyhow::Result<()> {
         .parse()
         .unwrap_or_else(|_| config_port);
     let addr = format!("0.0.0.0:{}", port);
-    let listener = TcpListener::bind(&addr).await.map_err(|e| {
-        error!("❌ 绑定地址 {} 失败: {}", addr, e);
-        anyhow::anyhow!("绑定地址失败: {}", e)
-    })?;
+    let listener = TcpListener::bind(&addr).await.expect("绑定地址失败");
     info!("🌐 服务器启动在 http://0.0.0.0:{}", port);
     info!("📋 API文档: http://IP:{}", port);
     info!("🚀 前端应用请运行: npm run dev");
