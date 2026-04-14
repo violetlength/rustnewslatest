@@ -1445,7 +1445,7 @@ async fn main() -> anyhow::Result<()> {
         .parse()
         .unwrap_or_else(|_| config_port);
     let addr = format!("0.0.0.0:{}", port);
-    let listener = TcpListener::bind(&addr).await.unwrap();
+    let listener = TcpListener::bind(&addr).await.expect("绑定地址失败");
     // let listener = TcpListener::bind("0.0.0.0:8080").await?;
     info!("🌐 服务器启动在 http://IP:{}", port);
     info!("📋 API文档: http://IP:{}", port);
