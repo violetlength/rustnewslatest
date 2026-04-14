@@ -1399,7 +1399,13 @@ async fn main() -> anyhow::Result<()> {
     let news_service = Arc::new(NewsService::with_config((*config).clone()));
     
     // 初始化用户数据源管理器
-    let user_source_manager = Arc::new(Mutex::new(UserSourceManager::new("data/user_sources.json")?));
+    let user_source_manager = Arc::new(Mutex::new(
+        UserSourceManager::new("data/user_sources.json").map_err(|e| {
+            error!("Failed to initialize UserSourceManager: {}", e);
+            e
+        })?
+    ));
+
     
     let app_state = AppState {
         news_service,
@@ -1440,18 +1446,31 @@ async fn main() -> anyhow::Result<()> {
                 .with_state(app_state);
 
     // 启动服务器
-    let port = std::env::var("PORT")
-        .unwrap_or_else(|_| config_port.to_string())
-        .parse()
-        .unwrap_or_else(|_| config_port);
+    let port: u16 = match std::env::var("PORT") {
+        Ok(val) => match val.parse::<u16>() {
+            Ok(p) => {
+                info!("Using PORT from environment variable: {}", p);
+                p
+            }
+            Err(e) => {
+                warn!("Failed to parse PORT env var '{}': {}. Falling back to config port {}", val, e, config_port);
+                config_port
+            }
+        },
+        Err(_) => {
+            info!("PORT env var not set, using config port: {}", config_port);
+            config_port
+        }
+    };
     let addr = format!("0.0.0.0:{}", port);
-    let listener = TcpListener::bind(&addr).await.unwrap();
-    // let listener = TcpListener::bind("0.0.0.0:8080").await?;
-    info!("🌐 服务器启动在 http://IP:{}", port);
-    info!("📋 API文档: http://IP:{}", port);
-    info!("🚀 前端应用请运行: npm run dev");
+    info!("Binding TCP listener on {}", addr);
+    let listener = TcpListener::bind(&addr).await
+        .expect(&format!("Failed to bind TcpListener to {} — is the port already in use?", addr));
+    info!("Server is listening on http://{}", addr);
+    info!("API available at http://0.0.0.0:{}", port);
 
-    axum::serve(listener, app).await?;
+    axum::serve(listener, app).await
+        .expect("axum::serve encountered a fatal error");
 
     Ok(())
 }
