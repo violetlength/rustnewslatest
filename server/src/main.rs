@@ -1364,12 +1364,39 @@ async fn delete_user_source(
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    // 初始化日志
+    // Initialize tracing subscriber first, before anything else, so that
+    // startup errors and panics are captured in the deployment logs.
+    // Log level is controlled by the RUST_LOG environment variable (default: info).
     tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::INFO)
+        .with_env_filter(
+            tracing_subscriber::EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info")),
+        )
+        .with_target(false)
         .init();
 
+    // Install a panic hook that logs the panic via tracing before aborting,
+    // so the message is visible in Railway's log stream.
+    let default_panic = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |info| {
+        let location = info
+            .location()
+            .map(|l| format!("{}:{}", l.file(), l.line()))
+            .unwrap_or_else(|| "unknown".to_string());
+        let message = if let Some(s) = info.payload().downcast_ref::<&str>() {
+            s.to_string()
+        } else if let Some(s) = info.payload().downcast_ref::<String>() {
+            s.clone()
+        } else {
+            "unknown panic payload".to_string()
+        };
+        tracing::error!("PANIC at {}: {}", location, message);
+        default_panic(info);
+    }));
+
+    info!("🚀 Tracing initialized — newslatest-server is starting up");
     info!("📰 启动 NewsLatest 服务器...");
+
 
     // 确保配置目录存在
     if let Err(e) = std::fs::create_dir_all("config") {
