@@ -1,1 +1,9 @@
-
+{
+  "current_config": {
+    "api_base": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    "api_key": "sk-f512b6f9abb84cb884d6c8b17e01b9c7",
+    "enabled": true,
+    "model": "qwen-plus",
+    "provider": "qwen"
+  }
+}
