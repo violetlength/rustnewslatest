@@ -1456,7 +1456,7 @@ async fn main() -> anyhow::Result<()> {
     info!("📋 API文档: http://IP:{}", port);
     info!("🚀 前端应用请运行: npm run dev");
 
-    axum::serve(listener, app).await?;
+    axum::serve(listener, app).await?;  
 
     Ok(())
 }
