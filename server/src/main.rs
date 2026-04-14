@@ -1375,7 +1375,7 @@ async fn main() -> anyhow::Result<()> {
     if let Err(e) = std::fs::create_dir_all("config") {
         warn!("⚠️ 创建 config 目录失败: {}，将使用默认配置", e);
     }
-    
+
     // 确保数据目录存在
     if let Err(e) = std::fs::create_dir_all("data") {
         warn!("⚠️ 创建 data 目录失败: {}，用户数据源可能无法保存", e);
@@ -1392,15 +1392,21 @@ async fn main() -> anyhow::Result<()> {
             Arc::new(config::Config::default())
         }
     };
-    
+
     // 获取端口配置
     let config_port = config.get_port();
-    
+
     let news_service = Arc::new(NewsService::with_config((*config).clone()));
-    
+
     // 初始化用户数据源管理器
-    let user_source_manager = Arc::new(Mutex::new(UserSourceManager::new("data/user_sources.json")?));
-    
+    let user_source_manager = match UserSourceManager::new("data/user_sources.json") {
+        Ok(manager) => Arc::new(Mutex::new(manager)),
+        Err(e) => {
+            error!("❌ 初始化用户数据源管理器失败: {}", e);
+            return Err(e);
+        }
+    };
+
     let app_state = AppState {
         news_service,
         cache: Arc::new(DashMap::new()),
@@ -1445,9 +1451,11 @@ async fn main() -> anyhow::Result<()> {
         .parse()
         .unwrap_or_else(|_| config_port);
     let addr = format!("0.0.0.0:{}", port);
-    let listener = TcpListener::bind(&addr).await.expect("绑定地址失败");
-    // let listener = TcpListener::bind("0.0.0.0:8080").await?;
-    info!("🌐 服务器启动在 http://IP:{}", port);
+    let listener = TcpListener::bind(&addr).await.map_err(|e| {
+        error!("❌ 绑定地址 {} 失败: {}", addr, e);
+        anyhow::anyhow!("绑定地址失败: {}", e)
+    })?;
+    info!("🌐 服务器启动在 http://0.0.0.0:{}", port);
     info!("📋 API文档: http://IP:{}", port);
     info!("🚀 前端应用请运行: npm run dev");
 
