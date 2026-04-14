@@ -13,6 +13,8 @@ RUN cargo build --release
 RUN rm -rf src
 
 COPY src ./src
+COPY config.toml ./config.toml
+COPY icon.ico ./icon.ico
 RUN cargo build --release
 
 # 运行阶段
