@@ -25,18 +25,18 @@
               "format": null,
               "clean": true
             },
-            "url": {
-              "selector": "a",
-              "attribute": "href",
-              "required": true,
-              "base_url": "https://news.dahe.cn/hnyw/",
-              "format": null,
-              "clean": true
-            },
             "timestamp": {
               "selector": "span",
               "attribute": "text",
               "required": false,
+              "base_url": "https://news.dahe.cn/hnyw/",
+              "format": null,
+              "clean": true
+            },
+            "url": {
+              "selector": "a",
+              "attribute": "href",
+              "required": true,
               "base_url": "https://news.dahe.cn/hnyw/",
               "format": null,
               "clean": true
@@ -142,9 +142,9 @@
           "item_list": "div.index_content_RQk8t > div",
           "item_node": "li.news-stream-newsStream-news-item-has-image",
           "fields": {
-            "author": {
-              "selector": "div.news-stream-newsStream-news-item-infor .news-stream-newsStream-mr10",
-              "attribute": "text",
+            "mobile_url": {
+              "selector": "div.news-stream-newsStream-news-item-infor a.ly",
+              "attribute": "href",
               "required": false,
               "base_url": "https://news.ifeng.com/",
               "format": null,
@@ -158,17 +158,9 @@
               "format": null,
               "clean": true
             },
-            "title": {
-              "selector": "h2 a",
+            "timestamp": {
+              "selector": "div.news-stream-newsStream-news-item-infor time",
               "attribute": "text",
-              "required": true,
-              "base_url": "https://news.ifeng.com/",
-              "format": null,
-              "clean": true
-            },
-            "mobile_url": {
-              "selector": "div.news-stream-newsStream-news-item-infor a.ly",
-              "attribute": "href",
               "required": false,
               "base_url": "https://news.ifeng.com/",
               "format": null,
@@ -190,10 +182,18 @@
               "format": null,
               "clean": true
             },
-            "timestamp": {
-              "selector": "div.news-stream-newsStream-news-item-infor time",
+            "author": {
+              "selector": "div.news-stream-newsStream-news-item-infor .news-stream-newsStream-mr10",
               "attribute": "text",
               "required": false,
+              "base_url": "https://news.ifeng.com/",
+              "format": null,
+              "clean": true
+            },
+            "title": {
+              "selector": "h2 a",
+              "attribute": "text",
+              "required": true,
               "base_url": "https://news.ifeng.com/",
               "format": null,
               "clean": true
@@ -211,71 +211,55 @@
       "is_active": true
     },
     {
-      "id": "26d01522-8d21-4b2e-8124-7b82b29d4930",
-      "name": "henan100",
-      "title": "henan100",
-      "description": "henan100",
+      "id": "d01bcef6-63c3-45f3-81d2-4a328b27162d",
+      "name": "dahe111",
+      "title": "dahe111",
+      "description": "dahe111",
       "source_type": "web",
-      "url": "https://www.henan100.com/news/",
-      "selector": "<ul class=\"newsList\" id=\"data\">  <li class=\"noPic news-list\"><a href=\"/news/2026/1240567.shtml\" target=\"_blank\"><div class=\"newsListRight\"><h3>国家医保局：推动脑机接口、手术机器人等新技术加速走向临床应用</h3><p>国家医保局医药服务管理司司长黄心宇会上表示，支持大医院应用临床新业务、新技术。聚焦填补诊疗空白、满足患者需求、代表科技前沿的技术创新，在医疗服务价格立项指...</p><h4>2026-04-13 11:41:19</h4></div></a></li> <li class=\"onePic news-list\"><a href=\"/news/2026/1240566.shtml\" target=\"_blank\"><img src=\"https://www.henan100.com/d/file/news/hn/tbgz/20260413/493714e01d303edb51c5eae52ab0990d.png\"><div class=\"newsListRight\"><h3>黄河科技学院主办 2026年动力学与机械工程国际学术研讨会（ISD...</h3><p>4月11日，2026年动力学与机械工程国际学术研讨会（ISDME2026）在我校成功举办。本次会议由黄河科技学院主办，AEIC学术交流中心协办，《应用力学学报》和Princess Sumaya Un...</p><h4>2026-04-13 11:20:15</h4></div></a></li> <li class=\"noPic news-list\"><a href=\"/news/2026/1240565.shtml\" target=\"_blank\"><div class=\"newsListRight\"><h3>国家医保局：因地制宜适当拉开不同等级医疗机构住院报销水平</h3><p>国家医保局医药服务管理司司长黄心宇会上表示，各地医保部门要综合考虑基金的保障能力，群众就医需求、基层服务能力等因素，合理确定基层医疗卫生机构的住院起付线，完善...</p><h4>2026-04-13 11:16:21</h4></div></a></li> <li class=\"noPic news-list\"><a href=\"/news/2026/1240564.shtml\" target=\"_blank\"><div class=\"newsListRight\"><h3>国家烟草专卖局原党组成员、副局长韩占武被“双开”</h3><p>经查，韩占武丧失理想信念，背弃初心使命，违反中央八项规定精神，违规收受礼品、消费卡；违反组织原则，不按规定报告个人有关事项，违规为他人在干部职工录用方面谋取利益并收...</p><h4>2026-04-13 11:15:25</h4></div></a></li> <li class=\"noPic news-list\"><a href=\"/news/2026/1240563.shtml\" target=\"_blank\"><div class=\"newsListRight\"><h3>重庆市政府原党组成员、副市长江敦涛被“双开”</h3><p>经查，江敦涛丧失理想信念，背弃初心使命，政绩观严重偏差，违背高质量发展要求，急功近利、盲目蛮干，履行全面从严治党主体责任不力，对抗组织审查，搞迷信活动；违反中央八项规定...</p><h4>2026-04-13 11:14:43</h4></div></a></li> <li class=\"noPic news-list\"><a href=\"/news/2026/1240562.shtml\" target=\"_blank\"><div class=\"newsListRight\"><h3>湖南省人大常委会原党组书记、副主任乌兰被“双开”</h3><p>经查，乌兰丧失理想信念，背弃初心使命，搞政治投机，结交政治骗子；违反中央八项规定精神，无偿接受他人提供的高档服装和高端医疗服务，接受可能影响公正执行公务的宴请；在干部...</p><h4>2026-04-13 11:04:00</h4></div></a></li> <li class=\"onePic news-list\"><a href=\"/news/2026/1240561.shtml\" target=\"_blank\"><img src=\"https://www.henan100.com/d/file/news/gn/now/20260413/9ae42e030270d74a961faaa0ed99a9e6.png\"><div class=\"newsListRight\"><h3>四川省“十五五”规划纲要全文发布...</h3><p>其中提出，四川省“十五五”时期GDP年均增长5.5%左右，全社会研发经费投入年均增长8%左右，居民人均可支配收入增长与GDP同步。</p><h4>2026-04-13 11:00:10</h4></div></a></li> <li class=\"noPic news-list\"><a href=\"/news/2026/1240560.shtml\" target=\"_blank\"><div class=\"newsListRight\"><h3>国家医保局：年度新增医保基金份额将适当向基层医疗卫生机构倾斜</h3><p>国家医保局医药服务管理司司长黄心宇会上表示，国家医保局将夯实基层医保定点服务体系，及时将符合条件的基层医疗卫生机构纳入医保定点范围，为群众就近就便就医提供坚...</p><h4>2026-04-13 10:59:16</h4></div></a></li> <li class=\"noPic news-list\"><a href=\"/news/2026/1240559.shtml\" target=\"_blank\"><div class=\"newsListRight\"><h3>郑州为高效能社会治理立规矩！《郑州市高效能社会治理网格化服务管理条例》6月1日起施行</h3><p>近年来，随着城市快速发展，公共服务不到位、矛盾纠纷化解不及时、特殊群体关爱不够等问题在一些领域仍然存在。老百姓关心的“急难愁盼”事儿，需要有人管、有法依。同...</p><h4>2026-04-13 10:42:46</h4></div></a></li> <li class=\"noPic news-list\"><a href=\"/news/2026/1240558.shtml\" target=\"_blank\"><div class=\"newsListRight\"><h3>大公国际副总经理霍霄被查</h3><p>大公国际资信评估有限公司副总经理霍霄涉嫌严重违纪违法，目前正接受中国国新控股有限责任公司纪委纪律审查和淮北市濉溪县监察委员会监察调查。</p><h4>2026-04-13 10:41:53</h4></div></a></li> <li class=\"noPic news-list\"><a href=\"/news/2026/1240556.shtml\" target=\"_blank\"><div class=\"newsListRight\"><h3>黄河科技学院牵头起草 《零碳校园创建与评价规范》团体标准正式发布</h3><p>近日，由黄河科技学院组织起草的《零碳校园创建与评价规范》（T/HNEE 012-2026）团体标准，经河南省能效技术协会正式批准发布。该标准于2026年4月10日发布，并将于2026年4...</p><h4>2026-04-13 10:22:16</h4></div></a></li> <li class=\"noPic news-list\"><a href=\"/news/2026/1240555.shtml\" target=\"_blank\"><div class=\"newsListRight\"><h3>中国长安拿下轻骑铃木50％股权</h3><p>交易概况显示，中国兵器装备集团签署分立协议，原由兵装集团持有的济南轻骑铃木摩托车有限公司50%的股权依法作为资产分割至中国长安汽车集团有限公司名下。</p><h4>2026-04-13 10:19:48</h4></div></a></li> <li class=\"onePic news-list\"><a href=\"/news/2026/1240554.shtml\" target=\"_blank\"><img src=\"https://www.henan100.com/d/file/news/hn/hnnews/20260413/530d8ac0556ba8dc6a89b8808921a41d.jpg\"><div class=\"newsListRight\"><h3>河南身份证、护照最快5天办好！...</h3><p>河南公安机关2026年便民利民服务措施公布，在6项便民利民服务措施中，公安部门进一步压缩居民身份证、出入境证件办理时限。其中，身份证办理时间缩短至15个工作日，特殊...</p><h4>2026-04-13 10:06:56</h4></div></a></li> <li class=\"noPic news-list\"><a href=\"/news/2026/1240553.shtml\" target=\"_blank\"><div class=\"newsListRight\"><h3>郑州市人大常委会原副主任宋书杰被查</h3><p>郑州市人大常委会原副主任宋书杰涉嫌严重违纪违法，目前正接受河南省纪委监委纪律审查和监察调查。</p><h4>2026-04-13 10:02:36</h4></div></a></li> <li class=\"noPic news-list\"><a href=\"/news/2026/1240552.shtml\" target=\"_blank\"><div class=\"newsListRight\"><h3>伊朗最高领袖军事顾问：伊朗不会“被帖文和幻想方案封锁”</h3><p>伊朗最高领袖军事顾问穆赫辛·雷扎伊12日表示，伊朗“不是一个能够被（社交媒体）帖文和幻想方案封锁的地方”。雷扎伊在社交媒体上发文说，美国在霍尔木兹海峡遭受“历史...</p><h4>2026-04-13 09:55:29</h4></div></a></li> <li class=\"noPic news-list\"><a href=\"/news/2026/1240551.shtml\" target=\"_blank\"><div class=\"newsListRight\"><h3>辽宁省交通建设投资集团原党委书记、董事长徐大庆被查</h3><p>辽宁省交通建设投资集团有限责任公司原党委书记、董事长徐大庆涉嫌严重违纪违法，目前正接受辽宁省纪委监委纪律审查和监察调查。</p><h4>2026-04-13 09:44:50</h4></div></a></li> <li class=\"onePic news-list\"><a href=\"/news/2026/1240550.shtml\" target=\"_blank\"><img src=\"https://www.henan100.com/d/file/news/gj/eye/20260413/a5e0045c3f1483219bef52d332af3861.jpg\"><div class=\"newsListRight\"><h3>公开征集线索，最高奖励20万！...</h3><p>4月13日，据国家医保局，为深化医保基金管理突出问题整治，充分调动广大人民群众参与医保基金监管的积极性、主动性，全国各地医保部门近日陆续发布公告，面向全社会公开征...</p><h4>2026-04-13 09:42:36</h4></div></a></li> <li class=\"noPic news-list\"><a href=\"/news/2026/1240549.shtml\" target=\"_blank\"><div class=\"newsListRight\"><h3>特朗普考虑恢复对伊朗有限军事打击</h3><p>据美国《华尔街日报》12日报道，在美国和伊朗谈判未能达成协议后，美国总统特朗普正考虑在封锁霍尔木兹海峡的同时恢复对伊朗的有限军事打击。报道说，美军对伊朗进行全...</p><h4>2026-04-13 09:41:52</h4></div></a></li> <li class=\"noPic news-list\"><a href=\"/news/2026/1240548.shtml\" target=\"_blank\"><div class=\"newsListRight\"><h3>央行开展5亿元7天期逆回购操作</h3><p>4月13日，央行公告称，开展5亿元7天逆回购操作，投标量5亿元，中标量5亿元，操作利率为1.40%，与此前持平。今日无逆回购到期。</p><h4>2026-04-13 09:40:04</h4></div></a></li>  \t\t\t</ul>",
+      "url": "https://news.dahe.cn/hnyw/",
+      "selector": "<div class=\"newsleft\" id=\"newslist\">         <ul class=\"newsleftul\" id=\"content\"><li><a href=\"https://news.dahe.cn/2026/04-21/2079505.html\" target=\"_blank\">第二十三届中国（漯河）食品博览会开幕</a><span>2026-04-21 08:11</span></li><li><a href=\"https://news.dahe.cn/2026/04-21/2079488.html\" target=\"_blank\">世界读书日特别策划丨李翠利的书苑新光</a><span>2026-04-21 07:41</span></li><li><a href=\"https://news.dahe.cn/2026/04-21/2079477.html\" target=\"_blank\">河南省篮球城市联赛开幕 “篮”动中原！</a><span>2026-04-21 07:32</span></li><li><a href=\"https://news.dahe.cn/2026/04-21/2079474.html\" target=\"_blank\">篮球名宿郑海霞 深情祝福送家乡</a><span>2026-04-21 07:31</span></li><li style=\"border-bottom: 1px dashed rgb(228, 228, 228);\"><a href=\"https://news.dahe.cn/2026/04-21/2079472.html\" target=\"_blank\">全国田径中长跑项群赛首站郑州落幕 河南15金 迎来赛季“开门红”</a><span>2026-04-21 07:31</span></li><li><a href=\"https://news.dahe.cn/2026/04-21/2079471.html\" target=\"_blank\">2026微博文化之夜丨讲好中国故事非常重要——访中国文物学会专家委...</a><span>2026-04-21 07:30</span></li><li><a href=\"https://news.dahe.cn/2026/04-21/2079469.html\" target=\"_blank\">黄河奔流 文化正新——2026微博文化之夜见闻</a><span>2026-04-21 07:30</span></li><li><a href=\"https://news.dahe.cn/2026/04-21/2079468.html\" target=\"_blank\">从笼统管控到精准施策 让郑州商城遗址“活”起来</a><span>2026-04-21 07:29</span></li><li><a href=\"https://news.dahe.cn/2026/04-21/2079467.html\" target=\"_blank\">道地山药有了“电子身份证”</a><span>2026-04-21 07:28</span></li><li style=\"border-bottom: 1px dashed rgb(228, 228, 228);\"><a href=\"https://news.dahe.cn/2026/04-21/2079465.html\" target=\"_blank\">向新而升，许昌正“起飞”</a><span>2026-04-21 07:28</span></li><li><a href=\"https://news.dahe.cn/2026/04-21/2079460.html\" target=\"_blank\">豫政观察丨合力奋战二季度，河南劲往哪儿使</a><span>2026-04-21 07:27</span></li><li><a href=\"https://news.dahe.cn/2026/04-21/2079457.html\" target=\"_blank\">扛稳经济大市挑大梁责任担当——访南阳市委书记王智慧</a><span>2026-04-21 07:26</span></li><li><a href=\"https://news.dahe.cn/2026/04-21/2079456.html\" target=\"_blank\">推动经济持续向好 奋力实现“时间过半、任务过半”——访省委常委、洛...</a><span>2026-04-21 07:26</span></li><li><a href=\"https://news.dahe.cn/2026/04-21/2079455.html\" target=\"_blank\">以郑州高质量发展 为全省大局多作贡献——访省委常委、郑州市委书记安...</a><span>2026-04-21 07:25</span></li><li style=\"border-bottom: 1px dashed rgb(228, 228, 228);\"><a href=\"https://news.dahe.cn/2026/04-21/2079454.html\" target=\"_blank\">埋头苦干实干 确保稳住工业压舱石——访省工业和信息化厅党组书记、厅...</a><span>2026-04-21 07:25</span></li><li><a href=\"https://news.dahe.cn/2026/04-21/2079453.html\" target=\"_blank\">增优势增效益 推动经济发展持续向好——访省发展改革委党组书记、主任...</a><span>2026-04-21 07:25</span></li><li><a href=\"https://news.dahe.cn/2026/04-21/2079452.html\" target=\"_blank\">全国首单文旅类REITs花落洛阳 文旅资产证券化 河南打了样</a><span>2026-04-21 07:24</span></li><li><a href=\"https://news.dahe.cn/2026/04-21/2079451.html\" target=\"_blank\">2026中华经典诗词论坛在郑州开幕</a><span>2026-04-21 07:21</span></li><li><a href=\"https://news.dahe.cn/2026/04-21/2079450.html\" target=\"_blank\">河南省第四届职业技能大赛在新乡开幕</a><span>2026-04-21 07:20</span></li><li style=\"border-bottom: 1px dashed rgb(228, 228, 228);\"><a href=\"https://news.dahe.cn/2026/04-21/2079449.html\" target=\"_blank\">一季度河南制造业销售收入同比增长10.1% 传统制造稳 新兴产业进</a><span>2026-04-21 07:20</span></li><li><a href=\"https://news.dahe.cn/2026/04-21/2079448.html\" target=\"_blank\">2026年赊店书会精彩启幕</a><span>2026-04-21 07:20</span></li><li><a href=\"https://news.dahe.cn/2026/04-21/2079447.html\" target=\"_blank\">滑县的大田咋瞧不见一个人</a><span>2026-04-21 07:19</span></li><li><a href=\"https://news.dahe.cn/2026/04-21/2079445.html\" target=\"_blank\">河南超有品 第十个“中国品牌日”丨宇通：不只惊艳一时 更是长久陪伴</a><span>2026-04-21 07:18</span></li><li><a href=\"https://news.dahe.cn/2026/04-21/2079443.html\" target=\"_blank\">红廉文化 沁润人心</a><span>2026-04-21 07:15</span></li><li style=\"border-bottom: 1px dashed rgb(228, 228, 228);\"><a href=\"https://news.dahe.cn/2026/04-21/2079442.html\" target=\"_blank\">GDP同比增长5.2% 一季度全省经济起步有力开局良好</a><span>2026-04-21 07:14</span></li><li><a href=\"https://news.dahe.cn/2026/04-21/2079441.html\" target=\"_blank\">中原观察丨奋力跑好“第二棒”</a><span>2026-04-21 07:14</span></li><li><a href=\"https://news.dahe.cn/2026/04-20/2079087.html\" target=\"_blank\">今日快评丨续写鲁豫有约新篇章</a><span>2026-04-20 07:32</span></li><li><a href=\"https://news.dahe.cn/2026/04-20/2079084.html\" target=\"_blank\">三月三 拜轩辕</a><span>2026-04-20 07:30</span></li><li><a href=\"https://news.dahe.cn/2026/04-20/2079081.html\" target=\"_blank\">寻根的感觉，永远那么亲切——访印度尼西亚河南商会执行会长阴卫军</a><span>2026-04-20 07:28</span></li><li style=\"border-bottom: 1px dashed rgb(228, 228, 228);\"><a href=\"https://news.dahe.cn/2026/04-20/2079080.html\" target=\"_blank\">让黄帝文化在海外落地生根——访法国河南同乡会会长祝晓琳</a><span>2026-04-20 07:28</span></li><li><a href=\"https://news.dahe.cn/2026/04-20/2079079.html\" target=\"_blank\">我是“河南人”，我的根在这里——访香港铜锣湾集团董事局主席、香港国...</a><span>2026-04-20 07:27</span></li><li><a href=\"https://news.dahe.cn/2026/04-20/2079077.html\" target=\"_blank\">让华夏文明的根脉变得可感可触——访中国社会科学院学部委员、一级研究...</a><span>2026-04-20 07:27</span></li><li><a href=\"https://news.dahe.cn/2026/04-20/2079076.html\" target=\"_blank\">期望拜祖传统代代相传——访新党副主席李胜峰</a><span>2026-04-20 07:26</span></li><li><a href=\"https://news.dahe.cn/2026/04-20/2079075.html\" target=\"_blank\">600多位台湾同胞参加丙午年黄帝故里拜祖大典 跨越海峡拜轩辕 乡愁...</a><span>2026-04-20 07:25</span></li><li style=\"border-bottom: 1px dashed rgb(228, 228, 228);\"><a href=\"https://news.dahe.cn/2026/04-20/2079073.html\" target=\"_blank\">狮子山对轩辕丘的依恋——一位香港青年眼中的拜祖大典</a><span>2026-04-20 07:25</span></li><li><a href=\"https://news.dahe.cn/2026/04-20/2079072.html\" target=\"_blank\">拜祖文</a><span>2026-04-20 07:24</span></li><li><a href=\"https://news.dahe.cn/2026/04-20/2079071.html\" target=\"_blank\">一场大典联通古今</a><span>2026-04-20 07:22</span></li><li><a href=\"https://news.dahe.cn/2026/04-20/2079070.html\" target=\"_blank\">我们在春天播下这些种子</a><span>2026-04-20 07:20</span></li><li><a href=\"https://news.dahe.cn/2026/04-20/2079069.html\" target=\"_blank\">吸引国内外330余家企业参与 起重装备展示“向上之力”</a><span>2026-04-20 07:16</span></li><li style=\"border-bottom: 1px dashed rgb(228, 228, 228);\"><a href=\"https://news.dahe.cn/2026/04-20/2079068.html\" target=\"_blank\">2025年河南省工业设计大赛结果出炉 共评出获奖作品145件</a><span>2026-04-20 07:15</span></li></ul><div class=\"paging clearfix\" id=\"paging\"> <a class=\"fl paging_btn paging_home\" style=\"background: rgb(44, 115, 172);\">首页</a> <a class=\"fl paging_btn paging_prev\" style=\"background: rgb(44, 115, 172);\">上一页</a> <a class=\"fl paging_btn paging_next\" style=\"background: rgb(44, 115, 172);\">下一页</a> <div class=\"fl switch_num\">共<span class=\"paging_all_num\">13</span>页 转到第 <input type=\"text\" value=\"1\" class=\"paging_num\">页 </div> <a class=\"fl paging_btn paging_skip\" style=\"background: rgb(44, 115, 172);\">跳转</a> <a class=\"fl paging_btn marginR0 paging_end\" style=\"background: rgb(44, 115, 172);\">尾页</a> </div>     </div>",
       "parsing_rules": {
         "task": "extract_news_list",
-        "source_url": "https://www.henan100.com/news/",
+        "source_url": "https://news.dahe.cn/hnyw/",
         "rules_version": "1.0",
         "selectors": {
-          "root_container": "ul.newsList",
-          "item_list": "ul.newsList",
-          "item_node": "li.news-list",
+          "root_container": "div#newslist",
+          "item_list": "ul#content",
+          "item_node": "li",
           "fields": {
-            "desc": {
-              "selector": "p",
-              "attribute": "text",
-              "required": false,
-              "base_url": "https://www.henan100.com/news/",
-              "format": null,
-              "clean": true
-            },
             "url": {
               "selector": "a",
               "attribute": "href",
               "required": true,
-              "base_url": "https://www.henan100.com/news/",
+              "base_url": "https://news.dahe.cn/hnyw/",
               "format": null,
               "clean": true
             },
             "title": {
-              "selector": "h3",
+              "selector": "a",
               "attribute": "text",
               "required": true,
-              "base_url": "https://www.henan100.com/news/",
+              "base_url": "https://news.dahe.cn/hnyw/",
               "format": null,
               "clean": true
             },
             "timestamp": {
-              "selector": "h4",
+              "selector": "span",
               "attribute": "text",
               "required": false,
-              "base_url": "https://www.henan100.com/news/",
-              "format": null,
-              "clean": true
-            },
-            "cover": {
-              "selector": "img",
-              "attribute": "src",
-              "required": false,
-              "base_url": "https://www.henan100.com/news/",
+              "base_url": "https://news.dahe.cn/hnyw/",
               "format": null,
               "clean": true
             }
           }
         },
-        "notes": "Auto-generated rules for https://www.henan100.com/news/ on 2026-04-13",
-        "created_at": "2026-04-13T06:09:04.413905400Z",
+        "notes": "Auto-generated rules for https://news.dahe.cn/hnyw/ on 2026-04-21",
+        "created_at": "2026-04-21T01:46:20.383313900Z",
         "success_rate": 1.0,
         "total_attempts": 0
       },
       "field_mapping_rules": null,
-      "created_at": "2026-04-13T06:08:59.723160600Z",
+      "created_at": "2026-04-21T01:45:44.159622900Z",
       "user_id": null,
       "is_active": true
     }

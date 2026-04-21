@@ -3,7 +3,7 @@
     "api_base": "https://dashscope.aliyuncs.com/compatible-mode/v1",
     "api_key": "",
     "enabled": true,
-    "model": "qwen-plus",
+    "model": "qwen3.6-plus",
     "provider": "qwen"
   }
 }

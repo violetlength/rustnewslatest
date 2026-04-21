@@ -134,7 +134,7 @@ const providerModels = {
   deepseek: ['deepseek-chat', 'deepseek-coder'],
   moonshot: ['moonshot-v1-8k', 'moonshot-v1-32k', 'moonshot-v1-128k'],
   zhipuai: ['glm-4', 'glm-4-0520', 'glm-4-air', 'glm-4-flash', 'glm-3-turbo'],
-  qwen: ['qwen-turbo', 'qwen-plus', 'qwen-max', 'qwen2-72b-instruct', 'qwen2-57b-llm'],
+  qwen: ['qwen-turbo', 'qwen3.6-plus', 'qwen-max', 'qwen2-72b-instruct', 'qwen2-57b-llm'],
   baichuan: ['Baichuan2-Turbo', 'Baichuan2-Turbo-192k', 'Baichuan-Text-Embedding'],
   doubao: ['doubao-lite-4k', 'doubao-lite-32k', 'doubao-lite-128k', 'doubao-pro-4k', 'doubao-pro-32k', 'doubao-pro-128k'],
   baidu: ['ernie-3.5-8k', 'ernie-4.0-8k', 'ernie-turbo-8k', 'ernie-speed-8k', 'ernie-lite-8k'],
