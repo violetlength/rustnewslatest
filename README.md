@@ -492,9 +492,10 @@ cargo test
 捐赠支持, 或者请我喝杯咖啡 ☕️
 如果对您有帮助，请点击右上角 ⭐Star 关注或扫码捐赠，感谢支持开源！
 
-![alt text](78b4796ba631fa985eb4ec689ef59c90.jpg)
-
-![alt text](86b7f83f3d7708b69e6d621d29ebf2b4.png)
+<div style="display: flex; gap: 20px; align-items: center;">
+  <img src="78b4796ba631fa985eb4ec689ef59c90.jpg" alt="捐赠二维码" width="200" />
+  <img src="86b7f83f3d7708b69e6d621d29ebf2b4.png" alt="捐赠二维码" width="200" />
+</div>
 ## 🤝 贡献指南
 
 1. Fork 项目
