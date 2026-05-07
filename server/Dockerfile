@@ -35,6 +35,6 @@ COPY --from=builder /app/config ./config
 EXPOSE 8080
 
 ENV RUST_LOG=info
-ENV PORT=8080
+# ENV PORT=8080
 
 CMD ["/usr/local/bin/newslatest-server"]
